@@ -4,7 +4,7 @@ import { Analytics } from '@vercel/analytics/next'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import './globals.css'
-
+import { Providers } from "@/components/provider/provider"
 const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
@@ -39,12 +39,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased bg-black">
+        <Providers>
         <Header />
         <main className="pt-16">
           {children}
         </main>
         <Footer />
         <Analytics />
+        </Providers>
       </body>
     </html>
   )

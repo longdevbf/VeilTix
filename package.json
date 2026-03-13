@@ -9,7 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@oasisprotocol/sapphire-wagmi-v2": "^3.0.1",
     "@radix-ui/react-toast": "^1.2.15",
+    "@rainbow-me/rainbowkit": "^2.2.10",
     "@vercel/analytics": "^1.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
