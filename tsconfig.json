@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "src/components/provider/provider.tsxx"  ],
   "exclude": ["node_modules"]
 }
