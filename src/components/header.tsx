@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import { useState } from "react"
 import Link from "next/link"
 import { Menu, X } from "lucide-react"
@@ -11,8 +12,11 @@ export function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-md border-b border-orange-500/20">
       <nav className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
-          VeilTix
+        <Link href="/" className="flex items-center gap-2">
+          <Image src="/veiltix-logo.png" alt="VeilTix Logo" width={70} height={70} className="rounded-sm" />
+          <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+            VeilTix
+          </span>
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
