@@ -1,4 +1,5 @@
 import { Mail, Linkedin } from "lucide-react"
+import { image } from "motion/react-client"
 
 export const metadata = {
   title: "About Us - VeilTix",
@@ -11,16 +12,19 @@ export default function AboutPage() {
       name: "Trần Đức Long",
       role: "Project Manager",
       description: "Leading the vision and strategy for VeilTix's growth and innovation.",
+      image: "/long.png",
     },
     {
       name: "Nguyễn Văn Năng",
       role: "Co-founder & Lead Developer",
       description: "Building the technical foundation that powers secure blockchain ticketing.",
+      image: "/nang.png",
     },
     {
       name: "Trịnh Minh Quân",
       role: "Co-founder & Blockchain Engineer",
       description: "Architecting the smart contracts and Web3 infrastructure for VeilTix.",
+      image: "/quan.png",
     },
   ]
 
@@ -91,12 +95,11 @@ export default function AboutPage() {
                 className="p-8 rounded-lg border border-orange-500/30 bg-orange-500/5 hover:bg-orange-500/10 transition"
               >
                 {/* Avatar placeholder */}
-                <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-3xl font-bold mb-6 mx-auto">
-                  {member.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </div>
+                <img 
+                  src={member.image}
+                  alt={member.name}
+                  className="w-24 h-24 rounded-full object-cover mb-6 mx-auto"
+                />
 
                 <h3 className="text-white font-bold text-xl text-center mb-2">
                   {member.name}

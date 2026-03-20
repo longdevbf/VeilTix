@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import Link from "next/link"
 import { Mail, Github, Twitter } from "lucide-react"
 
@@ -12,9 +13,18 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <h3 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent mb-4">
-              Veiltix
-            </h3>
+            <div className="flex items-center gap-3 mb-4">
+              <Image
+                src="/veiltix-logo.png"
+                alt="Veiltix Logo"
+                width={70}
+                height={70}
+                className="rounded-sm"
+              />
+              <h3 className="text-xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+                Veiltix
+              </h3>
+            </div>
             <p className="text-white/60 text-sm">
               Blockchain-powered ticket platform for secure event management.
             </p>
