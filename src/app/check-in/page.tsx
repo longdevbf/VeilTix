@@ -2,13 +2,13 @@
 
 import { QrCode, CheckCircle, X } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
-import { Html5QrcodeScanner } from "html5-qrcode"
+import { Html5Qrcode } from "html5-qrcode"
 
 export default function CheckInPage() {
   const [scanResult, setScanResult] = useState<string | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null)
+  const scannerRef = useRef<Html5Qrcode | null>(null)
 
   useEffect(() => {
     // Detect mobile device
@@ -24,39 +24,19 @@ export default function CheckInPage() {
   }, [])
 
   useEffect(() => {
-    if (isScanning && !scannerRef.current && isMobile) {
-      const qrScanner = new Html5QrcodeScanner(
-        "qr-reader",
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
-        false
-      )
-
-      qrScanner.render(
-        (decodedText) => {
-          setScanResult(decodedText)
-          setIsScanning(false)
-          qrScanner.clear()
-          scannerRef.current = null
-        },
-        (error) => {
-          console.log(error)
-        }
-      )
-
-      scannerRef.current = qrScanner
-    }
-
+    // Clear scanner on unmount
     return () => {
       if (scannerRef.current) {
-        scannerRef.current.clear()
-        scannerRef.current = null
+        scannerRef.current
+          .stop()
+          .catch(() => { })
+          .finally(() => {
+            scannerRef.current?.clear().catch(() => { })
+            scannerRef.current = null
+          })
       }
     }
-  }, [isScanning, isMobile])
+  }, [])
 
   const startScanning = () => {
     if (!isMobile) {
@@ -66,16 +46,60 @@ export default function CheckInPage() {
     setIsScanning(true)
   }
 
+  useEffect(() => {
+    if (isScanning && isMobile && !scannerRef.current) {
+      const html5QrCode = new Html5Qrcode("qr-reader")
+      scannerRef.current = html5QrCode
+
+      html5QrCode
+        .start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 220, height: 220 } },
+          (decodedText) => {
+            setScanResult(decodedText)
+            setIsScanning(false)
+            html5QrCode
+              .stop()
+              .catch(() => { })
+              .finally(() => {
+                html5QrCode.clear().catch(() => { })
+                scannerRef.current = null
+              })
+          },
+          (errorMessage) => {
+            // Uncomment to see continuous scanning errors
+            // console.log("QR scan error:", errorMessage)
+          }
+        )
+        .catch((err) => {
+          console.error("Unable to start QR scanner", err)
+          setIsScanning(false)
+          scannerRef.current = null
+        })
+    }
+  }, [isScanning, isMobile])
+
   const stopScanning = () => {
     setIsScanning(false)
     if (scannerRef.current) {
-      scannerRef.current.clear()
-      scannerRef.current = null
+      scannerRef.current
+        .stop()
+        .catch(() => { })
+        .finally(() => {
+          scannerRef.current?.clear().catch(() => { })
+          scannerRef.current = null
+        })
     }
   }
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-black pt-20">
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes scan {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(218px); }
+        }
+      `}} />
       <section className="relative py-20 px-6">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
@@ -92,9 +116,18 @@ export default function CheckInPage() {
                 {isScanning ? (
                   <div className="w-full h-full relative">
                     <div id="qr-reader" className="w-full h-full"></div>
+                    
+                    {/* Scan line effect */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[220px] pointer-events-none z-10 overflow-hidden">
+                      <div 
+                        className="w-full h-[2px] bg-orange-500 shadow-[0_0_15px_4px_rgba(249,115,22,0.8)] border-b border-orange-200" 
+                        style={{ animation: 'scan 2.5s ease-in-out infinite' }}
+                      ></div>
+                    </div>
+
                     <button
                       onClick={stopScanning}
-                      className="absolute top-2 right-2 bg-red-500/20 hover:bg-red-500/30 rounded-full p-2 transition-colors"
+                      className="absolute top-2 right-2 bg-red-500/20 hover:bg-red-500/30 rounded-full p-2 transition-colors z-20"
                       title="Stop scanning"
                     >
                       <X className="text-red-400" size={20} />
