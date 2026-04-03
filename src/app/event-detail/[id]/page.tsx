@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Calendar, MapPin, Users, ArrowLeft, Share2, Shield, Ticket, Clock, Info } from "lucide-react"
 import Link from "next/link"
@@ -10,47 +10,47 @@ export default function EventDetailPage() {
   const router = useRouter()
   const id = Number(params.id)
 
-  const events = useMemo(() => [
-    {
-      id: 1,
-      title: "Web3 Conference 2024",
-      date: "Mar 15, 2024",
-      time: "09:00 AM - 05:00 PM",
-      location: "San Francisco, CA",
-      address: "Moscone Center, 747 Howard St, San Francisco, CA 94103",
-      attendees: 2500,
-      price: "0.5 ETH",
-      description: "Join us for the most anticipated Web3 conference of the year. Featuring speakers from top blockchain projects, decentralized finance protocols, and NFT marketplaces. Learn about the future of the decentralized web and network with industry leaders.",
-      organizer: "Web3 Foundation",
-    },
-    {
-      id: 2,
-      title: "Crypto Music Festival",
-      date: "Apr 20, 2024",
-      time: "02:00 PM - 11:00 PM",
-      location: "Miami, FL",
-      address: "Bayfront Park, 301 Biscayne Blvd, Miami, FL 33132",
-      attendees: 5000,
-      price: "0.25 ETH",
-      description: "Experience the fusion of music and blockchain technology. A one-of-a-kind festival featuring world-renowned artists and exclusive NFT drops for attendees. Dance to the rhythm of the future in the heart of Miami.",
-      organizer: "CryptoBeats",
-    },
-    {
-      id: 3,
-      title: "NFT Art Exhibition",
-      date: "May 1, 2024",
-      time: "10:00 AM - 08:00 PM",
-      location: "New York, NY",
-      address: "The Shed, 545 W 30th St, New York, NY 10001",
-      attendees: 1200,
-      price: "0.1 ETH",
-      description: "Discover the next generation of digital art. This exhibition showcases groundbreaking NFT pieces from established and emerging artists. Explore the intersection of creativity and blockchain technology through immersive digital installations.",
-      organizer: "Digital Canvas",
-    },
-    // Add more if needed, or handle missing ID
-  ], [])
+  const [event, setEvent] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const event = events.find((e) => e.id === id) || events[0] // Fallback to first if not found
+  useEffect(() => {
+    if (!id) return;
+
+    const fetchEvent = async () => {
+      try {
+        const res = await fetch(`/api/events/${id}`)
+        if (!res.ok) throw new Error("Event not found")
+        const data = await res.json()
+        setEvent(data)
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchEvent()
+  }, [id])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (error || !event) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white p-6">
+        <h1 className="text-2xl font-bold mb-4">{error || "Event not found"}</h1>
+        <button onClick={() => router.back()} className="text-orange-400 hover:underline flex items-center gap-2">
+           <ArrowLeft size={18} /> Go Back
+        </button>
+      </div>
+    )
+  }
+
 
   return (
     <div className="min-h-screen bg-black text-white relative">
@@ -94,7 +94,7 @@ export default function EventDetailPage() {
                     </div>
                     <div>
                       <p className="text-white/50 text-sm uppercase tracking-wider font-semibold">Date</p>
-                      <p className="text-xl font-bold">{event.date}</p>
+                      <p className="text-xl font-bold">{new Date(event.start_time).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -103,7 +103,7 @@ export default function EventDetailPage() {
                     </div>
                     <div>
                       <p className="text-white/50 text-sm uppercase tracking-wider font-semibold">Time</p>
-                      <p className="text-xl font-bold">{event.time}</p>
+                      <p className="text-xl font-bold">{new Date(event.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -120,8 +120,8 @@ export default function EventDetailPage() {
                       <Users size={24} />
                     </div>
                     <div>
-                      <p className="text-white/50 text-sm uppercase tracking-wider font-semibold">Attending</p>
-                      <p className="text-xl font-bold">{event.attendees.toLocaleString()} Guests</p>
+                      <p className="text-white/50 text-sm uppercase tracking-wider font-semibold">Status</p>
+                      <p className="text-xl font-bold capitalize">{event.status}</p>
                     </div>
                   </div>
                 </div>
@@ -138,13 +138,25 @@ export default function EventDetailPage() {
                   </div>
 
                   <div className="p-6 rounded-xl bg-white/5 border border-white/10">
-                    <h3 className="font-bold mb-2 flex items-center gap-2">
-                       <MapPin size={18} className="text-orange-400" />
-                       Venue Information
+                    <h3 className="font-bold mb-4 flex items-center gap-2">
+                       <Ticket size={18} className="text-orange-400" />
+                       Ticket Tiers
                     </h3>
-                    <p className="text-white/60 text-sm">
-                      {event.address}
-                    </p>
+                    <div className="space-y-4">
+                      {event.tiers && event.tiers.length > 0 ? (
+                        event.tiers.map((tier: any) => (
+                          <div key={tier.Ticket_Tier_ID} className="flex items-center justify-between p-4 rounded-lg bg-white/5 border border-white/10">
+                            <div>
+                              <p className="font-bold text-white">{tier.tier}</p>
+                              <p className="text-xs text-white/40">Max Supply: {tier.max_supply}</p>
+                            </div>
+                            <p className="font-bold text-orange-400">{tier.price} ETH</p>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-white/40 text-sm italic">No ticket tiers available for this event yet.</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -156,10 +168,14 @@ export default function EventDetailPage() {
             <div className="sticky top-24 space-y-6">
               <div className="p-8 rounded-2xl border border-orange-500/30 bg-orange-500/5 backdrop-blur-sm shadow-xl shadow-orange-500/5">
                 <div className="mb-6">
-                  <p className="text-white/60 text-sm mb-1 uppercase tracking-widest font-bold">Ticket Price</p>
+                  <p className="text-white/60 text-sm mb-1 uppercase tracking-widest font-bold">Starting From</p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-extrabold text-white">{event.price.split(' ')[0]}</span>
-                    <span className="text-2xl font-bold text-orange-400">{event.price.split(' ')[1]}</span>
+                    <span className="text-4xl font-extrabold text-white">
+                      {event.tiers && event.tiers.length > 0 
+                        ? Math.min(...event.tiers.map((t: any) => t.price)) 
+                        : "TBA"}
+                    </span>
+                    <span className="text-2xl font-bold text-orange-400">ETH</span>
                   </div>
                 </div>
 
@@ -187,18 +203,22 @@ export default function EventDetailPage() {
                 </div>
               </div>
 
-              {/* Organizer Info */}
-              <div className="p-6 rounded-2xl border border-white/10 bg-white/5">
-                <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-3">Organizer</p>
-                <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center font-bold text-xl">
-                      {event.organizer[0]}
-                   </div>
-                   <div>
-                      <p className="font-bold">{event.organizer}</p>
-                      <Link href="#" className="text-orange-400 text-sm hover:underline">View Profile</Link>
-                   </div>
+              {/* Organizer & Contract Info */}
+              <div className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
+                <div>
+                   <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-3">Organizer Wallet</p>
+                   <p className="font-mono text-xs text-orange-400 break-all bg-black/30 p-2 rounded">
+                      {event.Wallet_ID || "Main Organizer"}
+                   </p>
                 </div>
+                {event.contract_address && (
+                  <div>
+                    <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-3">Contract Address</p>
+                    <p className="font-mono text-xs text-blue-400 break-all bg-black/30 p-2 rounded">
+                       {event.contract_address}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { Calendar, MapPin, Search, Users, ChevronLeft, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
@@ -10,173 +10,32 @@ export default function EventsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const EVENTS_PER_PAGE = 9
 
+  const [events, setEvents] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useState(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await fetch("/api/events")
+        if (!res.ok) throw new Error("Failed to fetch events")
+        const data = await res.json()
+        setEvents(data)
+      } catch (err: any) {
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchEvents()
+  })
+
   const filteredEvents = useMemo(() => {
-    const events = [
-      {
-        id: 1,
-        title: "Web3 Conference 2024",
-        date: "Mar 15, 2024",
-        location: "San Francisco, CA",
-        attendees: 2500,
-        price: "0.5 ETH",
-      },
-      {
-        id: 2,
-        title: "Crypto Music Festival",
-        date: "Apr 20, 2024",
-        location: "Miami, FL",
-        attendees: 5000,
-        price: "0.25 ETH",
-      },
-      {
-        id: 3,
-        title: "NFT Art Exhibition",
-        date: "May 1, 2024",
-        location: "New York, NY",
-        attendees: 1200,
-        price: "0.1 ETH",
-      },
-      {
-        id: 4,
-        title: "Blockchain Gaming Summit",
-        date: "May 10, 2024",
-        location: "Los Angeles, CA",
-        attendees: 3200,
-        price: "0.15 ETH",
-      },
-      {
-        id: 5,
-        title: "DeFi Protocol Meetup",
-        date: "May 25, 2024",
-        location: "Austin, TX",
-        attendees: 800,
-        price: "0.05 ETH",
-      },
-      {
-        id: 6,
-        title: "Web3 Developer Bootcamp",
-        date: "Jun 5, 2024",
-        location: "Denver, CO",
-        attendees: 1500,
-        price: "0.3 ETH",
-      },
-      {
-        id: 7,
-        title: "Metaverse Fashion Show",
-        date: "Jun 15, 2024",
-        location: "Virtual Event",
-        attendees: 10000,
-        price: "0.08 ETH",
-      },
-      {
-        id: 8,
-        title: "DAO Governance Workshop",
-        date: "Jun 20, 2024",
-        location: "Berlin, Germany",
-        attendees: 600,
-        price: "0.12 ETH",
-      },
-      {
-        id: 9,
-        title: "NFT Creators Expo",
-        date: "Jul 1, 2024",
-        location: "London, UK",
-        attendees: 2000,
-        price: "0.1 ETH",
-      },
-      {
-        id: 10,
-        title: "Smart Contract Audit Training",
-        date: "Jul 10, 2024",
-        location: "Singapore",
-        attendees: 300,
-        price: "0.4 ETH",
-      },
-      {
-        id: 11,
-        title: "Crypto Art Collector's Summit",
-        date: "Jul 18, 2024",
-        location: "Tokyo, Japan",
-        attendees: 1800,
-        price: "0.2 ETH",
-      },
-      {
-        id: 12,
-        title: "Web3 Marketing Conference",
-        date: "Aug 5, 2024",
-        location: "Toronto, Canada",
-        attendees: 2200,
-        price: "0.18 ETH",
-      },
-      {
-        id: 13,
-        title: "Tokenomics Design Workshop",
-        date: "Aug 12, 2024",
-        location: "Dubai, UAE",
-        attendees: 900,
-        price: "0.25 ETH",
-      },
-      {
-        id: 14,
-        title: "Web3 Security Forum",
-        date: "Aug 20, 2024",
-        location: "Stockholm, Sweden",
-        attendees: 1100,
-        price: "0.22 ETH",
-      },
-      {
-        id: 15,
-        title: "Decentralized Finance Summit",
-        date: "Sep 1, 2024",
-        location: "Hong Kong",
-        attendees: 4000,
-        price: "0.35 ETH",
-      },
-      {
-        id: 16,
-        title: "Web3 Product Launch",
-        date: "Sep 10, 2024",
-        location: "São Paulo, Brazil",
-        attendees: 3500,
-        price: "0.15 ETH",
-      },
-      {
-        id: 17,
-        title: "ERC-20 Token Standards Seminar",
-        date: "Sep 22, 2024",
-        location: "Amsterdam, Netherlands",
-        attendees: 750,
-        price: "0.1 ETH",
-      },
-      {
-        id: 18,
-        title: "Blockchain Innovation Expo",
-        date: "Oct 5, 2024",
-        location: "Barcelona, Spain",
-        attendees: 3800,
-        price: "0.2 ETH",
-      },
-      {
-        id: 19,
-        title: "Web3 Community Gathering",
-        date: "Oct 15, 2024",
-        location: "Montreal, Canada",
-        attendees: 2100,
-        price: "0.08 ETH",
-      },
-      {
-        id: 20,
-        title: "Crypto Investment Roundtable",
-        date: "Oct 25, 2024",
-        location: "Geneva, Switzerland",
-        attendees: 500,
-        price: "0.5 ETH",
-      },
-    ]
     return events.filter((event) =>
       event.title.toLowerCase().includes(searchTerm.toLowerCase())
     )
-  }, [searchTerm])
+  }, [searchTerm, events])
+
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredEvents.length / EVENTS_PER_PAGE)
@@ -220,18 +79,31 @@ export default function EventsPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {paginatedEvents.length > 0 ? (
+            {loading ? (
+              <div className="col-span-full py-20 text-center">
+                <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                <p className="text-white/60">Loading events...</p>
+              </div>
+            ) : error ? (
+              <div className="col-span-full py-20 text-center text-red-400">
+                <p>{error}</p>
+              </div>
+            ) : paginatedEvents.length > 0 ? (
               paginatedEvents.map((event) => (
                 <Link
-                  key={event.id}
-                  href={`/event-detail/${event.id}`}
+                  key={event.Event_ID}
+                  href={`/event-detail/${event.Event_ID}`}
                   className="border border-orange-500/30 rounded-lg overflow-hidden bg-orange-500/5 hover:bg-orange-500/10 transition group"
                 >
                   <div className="h-48 bg-gradient-to-br from-orange-500/20 to-orange-600/20 flex items-center justify-center relative overflow-hidden">
-                    <div className="text-center group-hover:scale-110 transition duration-500">
-                      <Calendar className="text-orange-400 mx-auto mb-2" size={32} />
-                      <p className="text-white/60 text-sm">Event Image</p>
-                    </div>
+                    {event.event_image ? (
+                      <img src={event.event_image} alt={event.title} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                    ) : (
+                      <div className="text-center group-hover:scale-110 transition duration-500">
+                        <Calendar className="text-orange-400 mx-auto mb-2" size={32} />
+                        <p className="text-white/60 text-sm">Event Image</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-6">
@@ -242,21 +114,22 @@ export default function EventsPage() {
                     <div className="space-y-3 mb-6 text-sm text-white/70">
                       <div className="flex items-center gap-2">
                         <Calendar size={16} className="text-orange-400" />
-                        <span>{event.date}</span>
+                        <span>{new Date(event.start_time).toLocaleDateString()}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <MapPin size={16} className="text-orange-400" />
                         <span>{event.location}</span>
                       </div>
+                      {/* Note: Attendees count might need to be joined from Orders if intended, for now showing total tiers supply or static */}
                       <div className="flex items-center gap-2">
                         <Users size={16} className="text-orange-400" />
-                        <span>{event.attendees} interested</span>
+                        <span>Active</span>
                       </div>
                     </div>
 
                     <div className="border-t border-orange-500/20 pt-4 flex items-center justify-between">
                       <span className="text-orange-400 font-bold">
-                        {event.price}
+                        {event.minPrice ? `${event.minPrice} ETH` : "TBA"}
                       </span>
                       <span className="px-4 py-2 bg-orange-500/20 text-orange-400 rounded group-hover:bg-orange-500 text-white transition text-sm font-semibold">
                         Get Ticket
