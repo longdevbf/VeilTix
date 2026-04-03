@@ -1,11 +1,17 @@
-import sql from 'mssql/msnodesqlv8';
+import sql from 'mssql';
 
 const sqlConfig = {
+    user: process.env.DB_USER as string,
+    password: process.env.DB_PASSWORD as string,
     database: process.env.DB_NAME as string,
     server: process.env.DB_SERVER as string,
-    driver: 'msnodesqlv8',
+    pool: {
+        max: 10,
+        min: 0,
+        idleTimeoutMillis: 30000,
+    },
     options: {
-        trustedConnection: true, // Quan trọng: Bật chế độ Windows Authentication
+        encrypt: false,
         trustServerCertificate: true,
     },
 };
@@ -17,7 +23,7 @@ const poolPromise =
     new sql.ConnectionPool(sqlConfig)
         .connect()
         .then((pool) => {
-            console.log('✅ Đã kết nối tới SQL Server (VeilTixDB) bằng Windows Auth');
+            console.log('✅ Đã kết nối tới SQL Server (VeilTixDB) bằng tài khoản SA');
             return pool;
         })
         .catch((err) => {
