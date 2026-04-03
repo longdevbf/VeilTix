@@ -1,19 +1,12 @@
-import sql from 'mssql';
+import sql from 'mssql/msnodesqlv8';
 
-const sqlConfig = {
-    user: process.env.DB_USER as string,
-    password: process.env.DB_PASSWORD as string,
-    database: process.env.DB_NAME as string,
-    server: process.env.DB_SERVER as string,
-    pool: {
-        max: 10,
-        min: 0,
-        idleTimeoutMillis: 30000,
-    },
-    options: {
-        encrypt: false,
-        trustServerCertificate: true,
-    },
+// Sử dụng Explicit Connection String để tránh lỗi ODBC Driver Manager
+const connectionString = 'Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-21ISSDL;Database=VeilTixDB;Trusted_Connection=yes;';
+
+const sqlConfig: any = {
+    connectionString: connectionString,
+    // Thông báo cho thư viện mssql biết là dùng driver native
+    driver: 'msnodesqlv8'
 };
 
 const globalForSql = global as unknown as { sqlPoolPromise: Promise<sql.ConnectionPool> };
@@ -23,7 +16,7 @@ const poolPromise =
     new sql.ConnectionPool(sqlConfig)
         .connect()
         .then((pool) => {
-            console.log('✅ Đã kết nối tới SQL Server (VeilTixDB) bằng tài khoản SA');
+            console.log('✅ Đã kết nối tới SQL Server (VeilTixDB) bằng Windows Auth (msnodesqlv8)');
             return pool;
         })
         .catch((err) => {
