@@ -1,7 +1,7 @@
 import sql from 'mssql/msnodesqlv8';
 
 // Sử dụng Explicit Connection String để tránh lỗi ODBC Driver Manager
-const connectionString = 'Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-21ISSDL;Database=VeilTixDB;Trusted_Connection=yes;';
+const connectionString = 'Driver={ODBC Driver 17 for SQL Server};Server=MNHQUAN\\SQLEXPRESS;Database=VeilTixDB;Trusted_Connection=yes;';
 
 const sqlConfig: any = {
     connectionString: connectionString,
