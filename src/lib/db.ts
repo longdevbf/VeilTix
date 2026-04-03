@@ -1,7 +1,11 @@
 import sql from 'mssql/msnodesqlv8';
 
 // Sử dụng Explicit Connection String để tránh lỗi ODBC Driver Manager
-const connectionString = 'Driver={ODBC Driver 17 for SQL Server};Server=MNHQUAN\\SQLEXPRESS;Database=VeilTixDB;Trusted_Connection=yes;';
+const connectionString = process.env.DATABASE_URL;
+
+if (!connectionString) {
+    throw new Error('Please define the DATABASE_URL environment variable inside .env.local');
+}
 
 const sqlConfig: any = {
     connectionString: connectionString,
