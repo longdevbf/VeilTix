@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react"
 import { Calendar, MapPin, Search, Users, ChevronLeft, ChevronRight } from "lucide-react"
+import Link from "next/link"
+
 
 export default function EventsPage() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -220,19 +222,20 @@ export default function EventsPage() {
           <div className="grid md:grid-cols-3 gap-8">
             {paginatedEvents.length > 0 ? (
               paginatedEvents.map((event) => (
-                <div
+                <Link
                   key={event.id}
-                  className="border border-orange-500/30 rounded-lg overflow-hidden bg-orange-500/5 hover:bg-orange-500/10 transition"
+                  href={`/event-detail/${event.id}`}
+                  className="border border-orange-500/30 rounded-lg overflow-hidden bg-orange-500/5 hover:bg-orange-500/10 transition group"
                 >
-                  <div className="h-48 bg-gradient-to-br from-orange-500/20 to-orange-600/20 flex items-center justify-center">
-                    <div className="text-center">
+                  <div className="h-48 bg-gradient-to-br from-orange-500/20 to-orange-600/20 flex items-center justify-center relative overflow-hidden">
+                    <div className="text-center group-hover:scale-110 transition duration-500">
                       <Calendar className="text-orange-400 mx-auto mb-2" size={32} />
                       <p className="text-white/60 text-sm">Event Image</p>
                     </div>
                   </div>
 
                   <div className="p-6">
-                    <h3 className="text-lg font-bold text-white mb-4">
+                    <h3 className="text-lg font-bold text-white mb-4 group-hover:text-orange-400 transition">
                       {event.title}
                     </h3>
 
@@ -255,12 +258,12 @@ export default function EventsPage() {
                       <span className="text-orange-400 font-bold">
                         {event.price}
                       </span>
-                      <button className="px-4 py-2 bg-orange-500/20 text-orange-400 rounded hover:bg-orange-500/30 transition text-sm font-semibold">
+                      <span className="px-4 py-2 bg-orange-500/20 text-orange-400 rounded group-hover:bg-orange-500 text-white transition text-sm font-semibold">
                         Get Ticket
-                      </button>
+                      </span>
                     </div>
                   </div>
-                </div>
+                </Link>
               ))
             ) : null}
           </div>
