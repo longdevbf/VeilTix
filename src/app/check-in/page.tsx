@@ -1,6 +1,6 @@
 "use client"
 
-import { QrCode, CheckCircle, X } from "lucide-react"
+import { QrCode, CheckCircle, X, Loader2, AlertCircle } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
 import { Html5Qrcode } from "html5-qrcode"
 
@@ -8,6 +8,7 @@ export default function CheckInPage() {
   const [scanResult, setScanResult] = useState<string | null>(null)
   const [isScanning, setIsScanning] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [validationStatus, setValidationStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle')
   const scannerRef = useRef<Html5Qrcode | null>(null)
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default function CheckInPage() {
       return
     }
     setScanResult(null)
+    setValidationStatus('idle')
     setIsScanning(true)
   }
 
@@ -58,6 +60,7 @@ export default function CheckInPage() {
           (decodedText) => {
             setScanResult(decodedText)
             setIsScanning(false)
+            setValidationStatus('validating')
             html5QrCode
               .stop()
               .catch(() => { })
@@ -65,6 +68,16 @@ export default function CheckInPage() {
                 html5QrCode.clear().catch(() => { })
                 scannerRef.current = null
               })
+            
+            // Giả lập quá trình API/Blockchain call mất 1.5 giây
+            setTimeout(() => {
+              // Mock tỉ lệ 70% thành công, 30% lỗi dể demo UI
+              if (Math.random() > 0.3) {
+                setValidationStatus('success')
+              } else {
+                setValidationStatus('error')
+              }
+            }, 1500)
           },
           (errorMessage) => {
             // Uncomment to see continuous scanning errors
@@ -147,15 +160,45 @@ export default function CheckInPage() {
               <p className="text-white/70">
                 Scan NFT tickets to instantly verify attendees and prevent fraud.
               </p>
-              {scanResult && (
-                <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded">
-                  <p className="text-green-400 text-sm font-medium">✓ Scanned successfully</p>
-                  <p className="text-green-400 text-xs mt-1 break-all">{scanResult}</p>
+              {validationStatus === 'validating' && (
+                <div className="mt-4 p-6 border border-orange-500/30 rounded-lg bg-orange-500/5 flex flex-col items-center justify-center space-y-3">
+                  <Loader2 className="animate-spin text-orange-400" size={32} />
+                  <p className="text-orange-400 font-medium">Đang xác thực trên Blockchain...</p>
+                  <p className="text-white/50 text-xs">Vui lòng đợi trong giây lát</p>
+                </div>
+              )}
+
+              {validationStatus === 'success' && (
+                <div className="mt-4 p-4 bg-green-500/10 border border-green-500/30 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle className="text-green-400" size={24} />
+                    <p className="text-green-400 font-bold">Check-in thành công!</p>
+                  </div>
+                  <p className="text-green-400/80 text-sm mb-3">Vé Blockchain hợp lệ.</p>
+                  <p className="text-white/60 text-xs mb-4 break-all bg-black/50 p-2 rounded border border-white/10">
+                    {scanResult}
+                  </p>
                   <button
                     onClick={startScanning}
-                    className="mt-2 text-orange-400 text-xs hover:text-orange-300 underline"
+                    className="w-full py-2 bg-green-500 hover:bg-green-600 text-white rounded font-medium transition-colors"
                   >
-                    Scan another code
+                    Quét vé tiếp theo
+                  </button>
+                </div>
+              )}
+
+              {validationStatus === 'error' && (
+                <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="text-red-400" size={24} />
+                    <p className="text-red-400 font-bold">Vé không hợp lệ!</p>
+                  </div>
+                  <p className="text-red-400/80 text-sm mb-4">Vé này đã được sử dụng hoặc không tồn tại trên hệ thống sự kiện.</p>
+                  <button
+                    onClick={startScanning}
+                    className="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded font-medium transition-colors"
+                  >
+                    Thử quét lại
                   </button>
                 </div>
               )}
