@@ -11,7 +11,7 @@ export class EventService {
             SELECT e.*, 
                    (SELECT MIN(price) FROM Ticket_Tiers tt WHERE tt.Event_ID = e.Event_ID) as minPrice
             FROM Events e
-            WHERE e.status = 'active'
+            WHERE e.status IN ('active', 'published')
         `);
         return result.recordset;
     }
