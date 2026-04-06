@@ -14,7 +14,7 @@ export default function EventsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useState(() => {
+  useEffect(() => {
     const fetchEvents = async () => {
       try {
         const res = await fetch("/api/events")
@@ -28,7 +28,7 @@ export default function EventsPage() {
       }
     }
     fetchEvents()
-  })
+  }, [])
 
   const filteredEvents = useMemo(() => {
     return events.filter((event) =>
