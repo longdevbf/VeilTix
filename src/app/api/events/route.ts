@@ -18,8 +18,12 @@ export async function POST(req: Request) {
         const body = await req.json();
         const id = await EventService.createEvent(body);
         return NextResponse.json({ id, message: "Event created successfully" });
-    } catch (error) {
+    } catch (error: any) {
         console.error("POST /api/events error:", error);
-        return NextResponse.json({ error: "Failed to create event" }, { status: 500 });
+        return NextResponse.json({ 
+            error: "Failed to create event", 
+            details: error?.message || "Unknown error",
+            stack: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+        }, { status: 500 });
     }
 }
