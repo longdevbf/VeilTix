@@ -49,7 +49,7 @@ export function Header() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`relative text-lg font-medium transition duration-300 ${
+                className={`relative inline-block text-lg font-medium transition-all duration-300 hover:scale-110 ${
                   active
                     ? "text-orange-400"
                     : "text-white/80 hover:text-orange-300"
