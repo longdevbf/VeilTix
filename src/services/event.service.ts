@@ -47,26 +47,55 @@ export class EventService {
     }
 
     /**
-     * Create a new event.
+     * Create a new event with multiple ticket tiers.
      */
-    static async createEvent(eventData: Partial<IEvent>): Promise<number> {
+    static async createEvent(eventData: Partial<IEventDetail>): Promise<number> {
         const pool = await poolPromise;
-        const result = await pool.request()
-            .input('Wallet_ID', sql.Int, eventData.Wallet_ID)
-            .input('title', sql.NVarChar, eventData.title)
-            .input('description', sql.NText, eventData.description)
-            .input('location', sql.NVarChar, eventData.location)
-            .input('start_time', sql.DateTime2, eventData.start_time)
-            .input('end_time', sql.DateTime2, eventData.end_time)
-            .input('contract_address', sql.VarChar, eventData.contract_address)
-            .input('status', sql.VarChar, eventData.status || 'active')
-            .input('event_image', sql.VarChar, eventData.event_image)
-            .query(`
-                INSERT INTO Events (Wallet_ID, title, description, location, start_time, end_time, contract_address, status, event_image)
-                VALUES (@Wallet_ID, @title, @description, @location, @start_time, @end_time, @contract_address, @status, @event_image);
-                SELECT SCOPE_IDENTITY() AS id;
-            `);
+        const transaction = new sql.Transaction(pool);
         
-        return result.recordset[0].id;
+        try {
+            await transaction.begin();
+            const request = new sql.Request(transaction);
+            
+            const result = await request
+                .input('Wallet_ID', sql.Int, eventData.Wallet_ID)
+                .input('title', sql.NVarChar, eventData.title)
+                .input('description', sql.NVarChar(sql.MAX), eventData.description)
+                .input('location', sql.NVarChar, eventData.location)
+                .input('start_time', sql.DateTime2, eventData.start_time)
+                .input('end_time', sql.DateTime2, eventData.end_time)
+                .input('contract_address', sql.VarChar, eventData.contract_address)
+                .input('status', sql.VarChar, eventData.status || 'active')
+                .input('event_image', sql.VarChar(sql.MAX), eventData.event_image)
+                .query(`
+                    INSERT INTO Events (Wallet_ID, title, description, location, start_time, end_time, contract_address, status, event_image)
+                    VALUES (@Wallet_ID, @title, @description, @location, @start_time, @end_time, @contract_address, @status, @event_image);
+                    SELECT SCOPE_IDENTITY() AS id;
+                `);
+            
+            const eventId = result.recordset[0].id;
+
+            // Insert Ticket Tiers
+            if (eventData.tiers && eventData.tiers.length > 0) {
+                for (const tier of eventData.tiers) {
+                    await new sql.Request(transaction)
+                        .input('Event_ID', sql.Int, eventId)
+                        .input('tier', sql.NVarChar, tier.tier)
+                        .input('price', sql.Decimal(18, 8), tier.price) // Using 8 decimals for crypto precision if stored as such
+                        .input('max_supply', sql.Int, tier.max_supply)
+                        .query(`
+                            INSERT INTO Ticket_Tiers (Event_ID, tier, price, max_supply)
+                            VALUES (@Event_ID, @tier, @price, @max_supply)
+                        `);
+                }
+            }
+
+            await transaction.commit();
+            return eventId;
+        } catch (err) {
+            console.error("Database Transaction Error:", err);
+            if (transaction) await transaction.rollback();
+            throw err;
+        }
     }
 }
