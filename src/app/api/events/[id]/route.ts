@@ -3,8 +3,9 @@ import { EventService } from "@/services/event.service";
 
 export async function GET(
     request: Request,
-    { params }: { params: { id: string } }
+    props: { params: Promise<{ id: string }> }
 ) {
+    const params = await props.params;
     const id = parseInt(params.id);
     if (isNaN(id)) {
         return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
