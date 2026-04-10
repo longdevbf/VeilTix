@@ -1,0 +1,8 @@
+﻿contract/hardhat.config.ts(1,35): error TS2307: Cannot find module 'hardhat/config' or its corresponding type declarations.
+contract/src/deploy.ts(1,24): error TS2307: Cannot find module 'hardhat' or its corresponding type declarations.
+contract/src/deploy.ts(20,20): error TS2737: BigInt literals are not available when targeting lower than ES2020.
+contract/src/deploy_v2.ts(2,24): error TS2307: Cannot find module 'hardhat' or its corresponding type declarations.
+contract/src/get_address.ts(2,24): error TS2307: Cannot find module 'hardhat' or its corresponding type declarations.
+src/app/check-in/page.tsx(35,41): error TS2339: Property 'catch' does not exist on type 'void'.
+src/app/check-in/page.tsx(68,37): error TS2339: Property 'catch' does not exist on type 'void'.
+src/app/check-in/page.tsx(100,39): error TS2339: Property 'catch' does not exist on type 'void'.

@@ -1,0 +1,1 @@
+[Microsoft][ODBC Driver 17 for SQL Server][SQL Server]The INSERT statement conflicted with the FOREIGN KEY constraint "FK__Events__Wallet_I__5070F446". The conflict occurred in database "VeilTixDB", table "dbo.Wallets", column 'Wallet_ID'.

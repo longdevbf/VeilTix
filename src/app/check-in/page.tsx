@@ -9,7 +9,25 @@ export default function CheckInPage() {
   const [isScanning, setIsScanning] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [validationStatus, setValidationStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle')
+  const [isScannerReady, setIsScannerReady] = useState(true)
   const scannerRef = useRef<Html5Qrcode | null>(null)
+
+  const cleanupScanner = async () => {
+    if (scannerRef.current) {
+      const scanner = scannerRef.current;
+      scannerRef.current = null; // nullify immediately to prevent races
+      try {
+        await scanner.stop();
+      } catch (e) {
+        // Ignored
+      }
+      try {
+        scanner.clear();
+      } catch (e) {
+        // Ignored
+      }
+    }
+  };
 
   useEffect(() => {
     // Detect mobile device
@@ -27,20 +45,12 @@ export default function CheckInPage() {
   useEffect(() => {
     // Clear scanner on unmount
     return () => {
-      if (scannerRef.current) {
-        scannerRef.current
-          .stop()
-          .catch(() => { })
-          .finally(() => {
-            scannerRef.current?.clear().catch(() => { })
-            scannerRef.current = null
-          })
-      }
+      cleanupScanner();
     }
   }, [])
 
   const startScanning = () => {
-    if (!isMobile) {
+    if (!isMobile || !isScannerReady) {
       return
     }
     setScanResult(null)
@@ -50,24 +60,19 @@ export default function CheckInPage() {
 
   useEffect(() => {
     if (isScanning && isMobile && !scannerRef.current) {
+      setIsScannerReady(false);
       const html5QrCode = new Html5Qrcode("qr-reader")
       scannerRef.current = html5QrCode
 
       html5QrCode
         .start(
           { facingMode: "environment" },
-          { fps: 10, qrbox: { width: 220, height: 220 } },
+          { fps: 10, aspectRatio: 1 },
           (decodedText) => {
             setScanResult(decodedText)
             setIsScanning(false)
             setValidationStatus('validating')
-            html5QrCode
-              .stop()
-              .catch(() => { })
-              .finally(() => {
-                html5QrCode.clear().catch(() => { })
-                scannerRef.current = null
-              })
+            cleanupScanner().finally(() => setIsScannerReady(true))
 
             setTimeout(() => {
               if (Math.random() > 0.3) {
@@ -77,15 +82,17 @@ export default function CheckInPage() {
               }
             }, 1500)
           },
-          (errorMessage) => {
+          (_errorMessage) => {
             // Uncomment to see continuous scanning errors
-            // console.log("QR scan error:", errorMessage)
+            // console.log("QR scan error:", _errorMessage)
           }
         )
+        .then(() => setIsScannerReady(true))
         .catch((err) => {
           console.error("Unable to start QR scanner", err)
           setIsScanning(false)
           scannerRef.current = null
+          setIsScannerReady(true)
         })
     }
   }, [isScanning, isMobile])
@@ -93,13 +100,8 @@ export default function CheckInPage() {
   const stopScanning = () => {
     setIsScanning(false)
     if (scannerRef.current) {
-      scannerRef.current
-        .stop()
-        .catch(() => { })
-        .finally(() => {
-          scannerRef.current?.clear().catch(() => { })
-          scannerRef.current = null
-        })
+      setIsScannerReady(false)
+      cleanupScanner().finally(() => setIsScannerReady(true))
     }
   }
 
@@ -114,6 +116,31 @@ export default function CheckInPage() {
         @keyframes shimmer {
           100% { transform: translateX(100%); }
         }
+        #qr-reader {
+          width: 100% !important;
+          height: 100% !important;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          border: none !important;
+          background: transparent !important;
+          overflow: hidden;
+          border-radius: 0.75rem;
+        }
+        #qr-reader * {
+          border: none !important;
+        }
+        #qr-reader video {
+          object-fit: cover !important;
+          width: 100% !important;
+          height: 100% !important;
+        }
+        #qr-reader canvas {
+          display: none !important;
+        }
+        #qr-reader__dashboard_section {
+          display: none !important;
+        }
       `}} />
       <section className="relative py-20 px-6">
         <div className="max-w-4xl mx-auto">
@@ -127,16 +154,17 @@ export default function CheckInPage() {
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {/* QR Code Scanner Main Card with Animated Border */}
             <div className="relative p-[2px] rounded-2xl overflow-hidden group">
-              {/* Spinning Conic Gradient */}
+               {/* Spinning Conic Gradient */}
               <div className="absolute inset-[-100%] bg-[conic-gradient(from_90deg_at_50%_50%,#00000000_70%,#f97316_100%)] animate-[spin_4s_linear_infinite]" />
 
               {/* Main Content Pane */}
               <div className="relative h-full rounded-2xl bg-[#0a0a0a] p-8 z-10 flex flex-col">
-                <div className="aspect-square bg-black rounded-xl flex items-center justify-center mb-6 border border-orange-500/20 relative overflow-hidden shadow-[0_0_30px_rgba(249,115,22,0.05)]">
+                <div className="aspect-square bg-black rounded-xl mb-6 border border-orange-500/20 relative overflow-hidden shadow-[0_0_30px_rgba(249,115,22,0.05)]">
+                  {/* Scanner video anchor */}
+                  <div id="qr-reader" className={`w-full h-full relative z-10 ${!isScanning ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}></div>
+                  
                   {isScanning ? (
-                    <div className="w-full h-full relative">
-                      <div id="qr-reader" className="w-full h-full"></div>
-
+                    <div className="absolute inset-0 w-full h-full z-20 pointer-events-none">
                       {/* Scan line effect */}
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[220px] h-[220px] pointer-events-none z-10 overflow-hidden">
                         <div
@@ -152,14 +180,14 @@ export default function CheckInPage() {
 
                       <button
                         onClick={stopScanning}
-                        className="absolute top-2 right-2 bg-red-500/20 hover:bg-red-500/30 rounded-full p-2 transition-colors z-20"
+                        className="absolute top-2 right-2 bg-red-500/20 hover:bg-red-500/30 rounded-full p-2 transition-colors pointer-events-auto z-30"
                         title="Stop scanning"
                       >
                         <X className="text-red-400" size={20} />
                       </button>
                     </div>
                   ) : (
-                    <div className="text-center cursor-pointer group-hover:scale-105 transition-transform duration-500" onClick={startScanning}>
+                    <div className="absolute inset-0 bg-[#0a0a0a] z-30 flex flex-col items-center justify-center cursor-pointer group-hover:scale-105 transition-transform duration-500" onClick={startScanning}>
                       <div className="relative">
                         <QrCode className="text-orange-400 mx-auto mb-4 relative z-10" size={64} />
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 bg-orange-500/20 blur-xl rounded-full"></div>

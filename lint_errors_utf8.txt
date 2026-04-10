@@ -1,0 +1,120 @@
+﻿
+> veiltix@0.1.0 lint
+> eslint
+
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\alter-db.js
+  1:10  warning  'sql' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\checkDb.js
+  1:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\app\about\page.tsx
+   2:10   warning  'image' is defined but never used                                                                                                                                                                                                                                                        @typescript-eslint/no-unused-vars
+  61:112  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                          react/no-unescaped-entities
+  98:17   warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\app\api\user\route.ts
+  51:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\app\check-in\page.tsx
+  80:12  warning  'errorMessage' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\app\contact\page.tsx
+  17:31  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\app\create\page.tsx
+    4:18  warning  'Calendar' is defined but never used                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+    4:35  warning  'DollarSign' is defined but never used                                                                                                                                                                                                                                                            @typescript-eslint/no-unused-vars
+   18:11  warning  'address' is assigned a value but never used                                                                                                                                                                                                                                                      @typescript-eslint/no-unused-vars
+  159:23  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  168:6   warning  React Hook useEffect has missing dependencies: 'formData.description', 'formData.endDate', 'formData.endTime', 'formData.eventName', 'formData.location', 'formData.startDate', 'formData.startTime', 'router', 'tiers', and 'uploadedImage'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  376:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element           @next/next/no-img-element
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\app\event-detail\[id]\page.tsx
+    6:8   warning  'Link' is defined but never used          @typescript-eslint/no-unused-vars
+   13:38  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   26:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:48  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:59  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\app\events\page.tsx
+   13:40  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   24:21  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  100:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\app\layout.tsx
+  8:7  warning  '_geist' is assigned a value but never used      @typescript-eslint/no-unused-vars
+  9:7  warning  '_geistMono' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\app\profile\page.tsx
+    5:8   warning  'Link' is defined but never used                                                                                                                                                                                                                                                         @typescript-eslint/no-unused-vars
+  238:23  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  308:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\components\config\wagmiConfig.ts
+  3:10  warning  'metaMask' is defined but never used                   @typescript-eslint/no-unused-vars
+  5:3   warning  'wrapConnectorWithSapphire' is defined but never used  @typescript-eslint/no-unused-vars
+  7:3   warning  'sapphireLocalnet' is defined but never used           @typescript-eslint/no-unused-vars
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\components\line-shadow-text.tsx
+  25:6  error  Error: Cannot create components during render
+
+Components created during render will reset their state each time they are created. Declare components outside of render.
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\components\line-shadow-text.tsx:25:6
+  23 |
+  24 |   return (
+> 25 |     <MotionComponent
+     |      ^^^^^^^^^^^^^^^ This component is created during render
+  26 |       style={{ "--shadow-color": shadowColor } as React.CSSProperties}
+  27 |       className={cn(
+  28 |         "relative z-0 inline-flex",
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\components\line-shadow-text.tsx:17:27
+  15 |   ...props
+  16 | }: LineShadowTextProps) {
+> 17 |   const MotionComponent = motion.create(Component)
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^ The component is created during render here
+  18 |   const content = typeof children === "string" ? children : null
+  19 |
+  20 |   if (!content) {  react-hooks/static-components
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\components\provider\provider.tsx
+  18:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\components\provider\provider.tsx:18:5
+  16 |
+  17 |   useEffect(() => {
+> 18 |     setMounted(true);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  19 |   }, []);
+  20 |
+  21 |   if (!mounted) {  react-hooks/set-state-in-effect
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\hooks\use-toast.ts
+  18:7  warning  'actionTypes' is assigned a value but only used as a type  @typescript-eslint/no-unused-vars
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\src\lib\db.ts
+  10:18  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\test-create.js
+  1:10  warning  'EventService' is defined but never used  @typescript-eslint/no-unused-vars
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\test-db-2.js
+  1:25  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\test-db.js
+  1:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+D:\University\Sixth Semester\Dapp Development\VeilTix\test-query.js
+  1:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+Γ£û 38 problems (17 errors, 21 warnings)
+

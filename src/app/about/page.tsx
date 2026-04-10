@@ -95,7 +95,7 @@ export default function AboutPage() {
                 className="p-8 rounded-lg border border-orange-500/30 bg-orange-500/5 hover:bg-orange-500/10 transition"
               >
                 {/* Avatar placeholder */}
-                <img 
+                <img
                   src={member.image}
                   alt={member.name}
                   className="w-24 h-24 rounded-full object-cover mb-6 mx-auto"
