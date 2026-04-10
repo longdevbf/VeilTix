@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @next/next/no-img-element */
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
@@ -21,8 +23,8 @@ export default function EventsPage() {
         if (!res.ok) throw new Error("Failed to fetch events")
         const data = await res.json()
         setEvents(data)
-      } catch (err: any) {
-        setError(err.message)
+      } catch (err: unknown) {
+        setError((err as Error).message)
       } finally {
         setLoading(false)
       }

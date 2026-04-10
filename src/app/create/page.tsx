@@ -136,7 +136,7 @@ export default function CreatePage() {
             end_time,
             contract_address: VEILTIX_ADDRESS, // In real app, might be dynamic or the singleton
             event_image: uploadedImage, // Storing base64 for demo, usually IPFS or upload s3
-            Wallet_ID: 1, // Placeholder for user ID or address, should match DB schema
+            Wallet_ID: 0, // Placeholder for user ID or address, should match DB schema
             tiers: tiers.map(t => ({
               tier: t.tier,
               price: parseFloat(t.price),
@@ -172,13 +172,13 @@ export default function CreatePage() {
       <section className="relative py-20 px-6 text-white">
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
-             <div className="p-3 rounded-2xl bg-orange-500/20 text-orange-400">
-                <Plus size={32} />
-             </div>
-             <div>
-                <h1 className="text-4xl md:text-5xl font-bold">Launch Your Event</h1>
-                <p className="text-white/60">Fill details for blockchain minting and database listing</p>
-             </div>
+            <div className="p-3 rounded-2xl bg-orange-500/20 text-orange-400">
+              <Plus size={32} />
+            </div>
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold">Launch Your Event</h1>
+              <p className="text-white/60">Fill details for blockchain minting and database listing</p>
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -190,40 +190,40 @@ export default function CreatePage() {
                   <h3 className="text-xl font-bold flex items-center gap-2 border-b border-white/10 pb-4">
                     <Info size={20} className="text-orange-400" /> Basic Information
                   </h3>
-                  
+
                   <div className="grid md:grid-cols-2 gap-6">
                     <div className="md:col-span-2">
-                       <label className="block text-sm font-bold text-white/70 mb-2">EVENT TITLE</label>
-                       <input 
-                        type="text" 
-                        name="eventName" 
-                        value={formData.eventName} 
+                      <label className="block text-sm font-bold text-white/70 mb-2">EVENT TITLE</label>
+                      <input
+                        type="text"
+                        name="eventName"
+                        value={formData.eventName}
                         onChange={handleInputChange}
-                        placeholder="Ex: Web3 Founders Night" 
+                        placeholder="Ex: Web3 Founders Night"
                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500/50 outline-none transition"
                         required
                       />
                     </div>
                     <div className="md:col-span-2">
-                       <label className="block text-sm font-bold text-white/70 mb-2">LOCATION</label>
-                       <input 
-                        type="text" 
-                        name="location" 
-                        value={formData.location} 
+                      <label className="block text-sm font-bold text-white/70 mb-2">LOCATION</label>
+                      <input
+                        type="text"
+                        name="location"
+                        value={formData.location}
                         onChange={handleInputChange}
-                        placeholder="Ex: Ho Chi Minh City, Convention Center" 
+                        placeholder="Ex: Ho Chi Minh City, Convention Center"
                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500/50 outline-none transition"
                         required
                       />
                     </div>
                     <div className="md:col-span-2">
-                       <label className="block text-sm font-bold text-white/70 mb-2">DESCRIPTION</label>
-                       <textarea 
-                        name="description" 
-                        value={formData.description} 
+                      <label className="block text-sm font-bold text-white/70 mb-2">DESCRIPTION</label>
+                      <textarea
+                        name="description"
+                        value={formData.description}
                         onChange={handleInputChange}
                         rows={4}
-                        placeholder="Tell people about your event..." 
+                        placeholder="Tell people about your event..."
                         className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500/50 outline-none transition resize-none"
                         required
                       />
@@ -233,110 +233,110 @@ export default function CreatePage() {
 
                 {/* Section: Timing */}
                 <div className="space-y-6">
-                   <h3 className="text-xl font-bold flex items-center gap-2 border-b border-white/10 pb-4">
+                  <h3 className="text-xl font-bold flex items-center gap-2 border-b border-white/10 pb-4">
                     <Clock size={20} className="text-orange-400" /> Date & Time
                   </h3>
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                        <label className="block text-sm font-bold text-white/70 mb-2 underline decoration-orange-500/30">START DATE</label>
-                        <input type="date" name="startDate" value={formData.startDate} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500" required />
+                      <label className="block text-sm font-bold text-white/70 mb-2 underline decoration-orange-500/30">START DATE</label>
+                      <input type="date" name="startDate" value={formData.startDate} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500" required />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-white/70 mb-2 underline decoration-orange-500/30">START TIME</label>
-                        <input type="time" name="startTime" value={formData.startTime} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500" required />
+                      <label className="block text-sm font-bold text-white/70 mb-2 underline decoration-orange-500/30">START TIME</label>
+                      <input type="time" name="startTime" value={formData.startTime} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500" required />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-white/70 mb-2 italic">END DATE</label>
-                        <input type="date" name="endDate" value={formData.endDate} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500" />
+                      <label className="block text-sm font-bold text-white/70 mb-2 italic">END DATE</label>
+                      <input type="date" name="endDate" value={formData.endDate} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500" />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-white/70 mb-2 italic">END TIME</label>
-                        <input type="time" name="endTime" value={formData.endTime} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500" />
+                      <label className="block text-sm font-bold text-white/70 mb-2 italic">END TIME</label>
+                      <input type="time" name="endTime" value={formData.endTime} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500" />
                     </div>
                   </div>
                 </div>
 
                 {/* Section: Tiers */}
                 <div className="space-y-6">
-                   <div className="flex items-center justify-between border-b border-white/10 pb-4">
-                      <h3 className="text-xl font-bold flex items-center gap-2">
-                        <Users size={20} className="text-orange-400" /> Ticket Tiers
-                      </h3>
-                      <button type="button" onClick={addTier} className="text-sm px-3 py-1 bg-orange-500/20 text-orange-400 rounded-lg hover:bg-orange-500/30 transition flex items-center gap-1">
-                        <Plus size={14} /> Add Tier
-                      </button>
-                   </div>
-                   <div className="space-y-4">
-                      {tiers.map((tier, index) => (
-                        <div key={index} className="grid md:grid-cols-4 gap-4 p-4 rounded-xl bg-white/5 border border-white/5 items-end relative group">
-                           {index > 0 && (
-                            <button type="button" onClick={() => removeTier(index)} className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg">
-                               <Trash2 size={12} />
-                            </button>
-                           )}
-                           <div className="md:col-span-2">
-                              <label className="block text-xs font-bold text-white/40 mb-1">TIER NAME</label>
-                              <input type="text" placeholder="Standard" value={tier.tier} onChange={(e) => handleTierChange(index, 'tier', e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none" required />
-                           </div>
-                           <div>
-                              <label className="block text-xs font-bold text-white/40 mb-1">PRICE (ETH)</label>
-                              <input type="number" step="0.001" value={tier.price} onChange={(e) => handleTierChange(index, 'price', e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none" required />
-                           </div>
-                           <div>
-                              <label className="block text-xs font-bold text-white/40 mb-1">SUPPLY</label>
-                              <input type="number" value={tier.max_supply} onChange={(e) => handleTierChange(index, 'max_supply', e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none" required />
-                           </div>
+                  <div className="flex items-center justify-between border-b border-white/10 pb-4">
+                    <h3 className="text-xl font-bold flex items-center gap-2">
+                      <Users size={20} className="text-orange-400" /> Ticket Tiers
+                    </h3>
+                    <button type="button" onClick={addTier} className="text-sm px-3 py-1 bg-orange-500/20 text-orange-400 rounded-lg hover:bg-orange-500/30 transition flex items-center gap-1">
+                      <Plus size={14} /> Add Tier
+                    </button>
+                  </div>
+                  <div className="space-y-4">
+                    {tiers.map((tier, index) => (
+                      <div key={index} className="grid md:grid-cols-4 gap-4 p-4 rounded-xl bg-white/5 border border-white/5 items-end relative group">
+                        {index > 0 && (
+                          <button type="button" onClick={() => removeTier(index)} className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition shadow-lg">
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                        <div className="md:col-span-2">
+                          <label className="block text-xs font-bold text-white/40 mb-1">TIER NAME</label>
+                          <input type="text" placeholder="Standard" value={tier.tier} onChange={(e) => handleTierChange(index, 'tier', e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none" required />
                         </div>
-                      ))}
-                   </div>
+                        <div>
+                          <label className="block text-xs font-bold text-white/40 mb-1">PRICE (ETH)</label>
+                          <input type="number" step="0.001" value={tier.price} onChange={(e) => handleTierChange(index, 'price', e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none" required />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-white/40 mb-1">SUPPLY</label>
+                          <input type="number" value={tier.max_supply} onChange={(e) => handleTierChange(index, 'max_supply', e.target.value)} className="w-full bg-black/30 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none" required />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Section: Contract Rules */}
                 <div className="space-y-6">
-                   <h3 className="text-xl font-bold flex items-center gap-2 border-b border-white/10 pb-4">
+                  <h3 className="text-xl font-bold flex items-center gap-2 border-b border-white/10 pb-4">
                     <Shield size={20} className="text-orange-400" /> Contract Rules
                   </h3>
                   <div className="grid md:grid-cols-2 gap-8">
-                      <div className="flex items-center justify-between p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
-                        <div>
-                           <p className="font-bold">Transferable</p>
-                           <p className="text-xs text-white/50">Allow users to send tickets to others</p>
-                        </div>
-                        <input type="checkbox" name="transferable" checked={formData.transferable} onChange={handleInputChange} className="w-6 h-6 accent-orange-500 cursor-pointer" />
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
+                      <div>
+                        <p className="font-bold">Transferable</p>
+                        <p className="text-xs text-white/50">Allow users to send tickets to others</p>
                       </div>
+                      <input type="checkbox" name="transferable" checked={formData.transferable} onChange={handleInputChange} className="w-6 h-6 accent-orange-500 cursor-pointer" />
+                    </div>
 
-                      <div className="flex items-center justify-between p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
-                        <div>
-                           <p className="font-bold">Refundable</p>
-                           <p className="text-xs text-white/50">Enable on-chain refund requests</p>
-                        </div>
-                        <input type="checkbox" name="refundable" checked={formData.refundable} onChange={handleInputChange} className="w-6 h-6 accent-orange-500 cursor-pointer" />
+                    <div className="flex items-center justify-between p-4 rounded-xl bg-orange-500/5 border border-orange-500/10">
+                      <div>
+                        <p className="font-bold">Refundable</p>
+                        <p className="text-xs text-white/50">Enable on-chain refund requests</p>
                       </div>
+                      <input type="checkbox" name="refundable" checked={formData.refundable} onChange={handleInputChange} className="w-6 h-6 accent-orange-500 cursor-pointer" />
+                    </div>
 
-                      {formData.refundable && (
-                         <div className="md:col-span-2">
-                            <label className="block text-sm font-bold text-white/70 mb-2">REFUND DEADLINE</label>
-                            <input type="datetime-local" name="refundDeadline" value={formData.refundDeadline} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500 outline-none" required={formData.refundable} />
-                         </div>
-                      )}
-
+                    {formData.refundable && (
                       <div className="md:col-span-2">
-                          <label className="block text-sm font-bold text-white/70 mb-2 flex items-center gap-2">
-                             Max Tickets Per User 
-                             <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded italic">Anti-Scalper Control</span>
-                          </label>
-                          <input type="number" name="maxPerUser" value={formData.maxPerUser} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500 outline-none" required />
+                        <label className="block text-sm font-bold text-white/70 mb-2">REFUND DEADLINE</label>
+                        <input type="datetime-local" name="refundDeadline" value={formData.refundDeadline} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500 outline-none" required={formData.refundable} />
                       </div>
+                    )}
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-bold text-white/70 mb-2 flex items-center gap-2">
+                        Max Tickets Per User
+                        <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded italic">Anti-Scalper Control</span>
+                      </label>
+                      <input type="number" name="maxPerUser" value={formData.maxPerUser} onChange={handleInputChange} className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:border-orange-500 outline-none" required />
+                    </div>
                   </div>
                 </div>
 
                 {/* Submit Action */}
                 <div className="pt-6">
-                   {!isConnected ? (
-                      <div className="bg-orange-500/10 border border-orange-500/30 p-6 rounded-xl text-center">
-                        <p className="text-orange-400 font-bold mb-4">Please connect your wallet to create event</p>
-                      </div>
-                   ) : (
+                  {!isConnected ? (
+                    <div className="bg-orange-500/10 border border-orange-500/30 p-6 rounded-xl text-center">
+                      <p className="text-orange-400 font-bold mb-4">Please connect your wallet to create event</p>
+                    </div>
+                  ) : (
                     <button
                       type="submit"
                       disabled={isSubmitting || isMinting || isWaitingForTx}
@@ -354,61 +354,61 @@ export default function CreatePage() {
                         </>
                       )}
                     </button>
-                   )}
-                   {mintError && <p className="text-red-400 text-sm mt-4 text-center">Error: {mintError.message}</p>}
+                  )}
+                  {mintError && <p className="text-red-400 text-sm mt-4 text-center">Error: {mintError.message}</p>}
                 </div>
               </form>
             </div>
 
             {/* Sidebar Column: Preview / Upload */}
             <div className="lg:col-span-1 space-y-6">
-               <div className="bg-white/5 border border-white/10 p-6 rounded-2xl">
-                  <label className="block text-sm font-bold text-white/70 mb-4">EVENT COVER IMAGE</label>
-                  <div className="relative border-2 border-dashed border-orange-500/30 rounded-xl p-4 text-center hover:border-orange-500/50 transition cursor-pointer group bg-black/20">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                    />
-                    {uploadedImage ? (
-                      <div className="space-y-4">
-                        <img src={uploadedImage} alt="Preview" className="w-full h-56 object-cover rounded-lg shadow-2xl" />
-                        <div className="flex items-center justify-center gap-2 text-orange-400 text-sm font-bold">
-                           <Upload size={16} /> Click to change
-                        </div>
+              <div className="bg-white/5 border border-white/10 p-6 rounded-2xl">
+                <label className="block text-sm font-bold text-white/70 mb-4">EVENT COVER IMAGE</label>
+                <div className="relative border-2 border-dashed border-orange-500/30 rounded-xl p-4 text-center hover:border-orange-500/50 transition cursor-pointer group bg-black/20">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                  />
+                  {uploadedImage ? (
+                    <div className="space-y-4">
+                      <img src={uploadedImage} alt="Preview" className="w-full h-56 object-cover rounded-lg shadow-2xl" />
+                      <div className="flex items-center justify-center gap-2 text-orange-400 text-sm font-bold">
+                        <Upload size={16} /> Click to change
                       </div>
-                    ) : (
-                      <div className="py-12 space-y-3">
-                        <Upload size={48} className="mx-auto text-orange-400/40 group-hover:text-orange-400 transition" />
-                        <div>
-                          <p className="text-white font-bold text-lg">Upload Cover</p>
-                          <p className="text-white/40 text-xs">High Resolution PNG/JPG</p>
-                        </div>
+                    </div>
+                  ) : (
+                    <div className="py-12 space-y-3">
+                      <Upload size={48} className="mx-auto text-orange-400/40 group-hover:text-orange-400 transition" />
+                      <div>
+                        <p className="text-white font-bold text-lg">Upload Cover</p>
+                        <p className="text-white/40 text-xs">High Resolution PNG/JPG</p>
                       </div>
-                    )}
-                  </div>
-               </div>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-               <div className="p-6 rounded-2xl bg-orange-500/5 border border-orange-500/20 space-y-4">
-                  <h4 className="font-bold flex items-center gap-2">
-                     <Shield size={18} className="text-orange-400" /> What happens next?
-                  </h4>
-                  <ul className="text-sm space-y-3 text-white/60">
-                    <li className="flex gap-2">
-                       <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center flex-shrink-0 text-[10px]">1</span>
-                       Your event is minted as a permanent record on Oasis Sapphire.
-                    </li>
-                    <li className="flex gap-2">
-                       <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center flex-shrink-0 text-[10px]">2</span>
-                       Metadata is secured in the private database.
-                    </li>
-                    <li className="flex gap-2">
-                       <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center flex-shrink-0 text-[10px]">3</span>
-                       Tickets go live immediately for the public.
-                    </li>
-                  </ul>
-               </div>
+              <div className="p-6 rounded-2xl bg-orange-500/5 border border-orange-500/20 space-y-4">
+                <h4 className="font-bold flex items-center gap-2">
+                  <Shield size={18} className="text-orange-400" /> What happens next?
+                </h4>
+                <ul className="text-sm space-y-3 text-white/60">
+                  <li className="flex gap-2">
+                    <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center flex-shrink-0 text-[10px]">1</span>
+                    Your event is minted as a permanent record on Oasis Sapphire.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center flex-shrink-0 text-[10px]">2</span>
+                    Metadata is secured in the private database.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="w-5 h-5 rounded-full bg-orange-500/20 text-orange-400 flex items-center justify-center flex-shrink-0 text-[10px]">3</span>
+                    Tickets go live immediately for the public.
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
