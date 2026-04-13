@@ -9,6 +9,9 @@ export interface IEvent {
     contract_address?: string;
     status: string;
     event_image?: string;
+    is_online: boolean;
+    latitude?: number;
+    longitude?: number;
     minPrice?: number; // Calculated field
 }
 
