@@ -3,6 +3,8 @@ import { poolPromise, sql } from "@/lib/db";
 export interface IUser {
     User_ID: number;
     email: string;
+    username?: string;
+    avatar_url?: string;
     created_at: Date;
 }
 
@@ -17,14 +19,14 @@ export interface IUserSession {
     User_ID: number;
     Wallet_ID: number;
     email: string;
+    username?: string;
+    avatar_url?: string;
     role: 'organizer' | 'customer';
     address: string;
+    created_at: Date;
 }
 
 export class UserService {
-    /**
-     * REGISTER: Create a new user by email.
-     */
     static async registerUser(email: string): Promise<number> {
         const pool = await poolPromise;
         const result = await pool.request()
@@ -41,13 +43,9 @@ export class UserService {
                     SELECT User_ID AS id FROM Users WHERE email = @email;
                 END
             `);
-        
         return result.recordset[0].id;
     }
 
-    /**
-     * LINK WALLET: Link a wallet address to a User ID with a specific role.
-     */
     static async linkWallet(userId: number, address: string, role: string): Promise<void> {
         const pool = await poolPromise;
         await pool.request()
@@ -68,39 +66,44 @@ export class UserService {
             `);
     }
 
-    /**
-     * LOGIN: Get user and role by wallet address.
-     */
     static async getUserByWallet(address: string): Promise<IUserSession | null> {
         const pool = await poolPromise;
         const result = await pool.request()
             .input('address_wallet', sql.VarChar, address.toLowerCase())
             .query(`
-                SELECT u.User_ID, w.Wallet_ID, u.email, w.role, w.address_wallet as address
+                SELECT u.User_ID, w.Wallet_ID, u.email, u.username, u.avatar_url, u.created_at, w.role, w.address_wallet as address
                 FROM Wallets w
                 JOIN Users u ON w.User_ID = u.User_ID
                 WHERE w.address_wallet = @address_wallet
             `);
-        
         if (result.recordset.length === 0) return null;
         return result.recordset[0];
     }
 
-    /**
-     * CHECK ACCOUNT: Get user info by email.
-     */
     static async getUserByEmail(email: string): Promise<IUserSession | null> {
         const pool = await poolPromise;
         const result = await pool.request()
             .input('email', sql.NVarChar, email)
             .query(`
-                SELECT u.User_ID, w.Wallet_ID, u.email, w.role, w.address_wallet as address
+                SELECT u.User_ID, w.Wallet_ID, u.email, u.username, u.avatar_url, u.created_at, w.role, w.address_wallet as address
                 FROM Users u
                 LEFT JOIN Wallets w ON u.User_ID = w.User_ID
                 WHERE u.email = @email
             `);
-        
         if (result.recordset.length === 0) return null;
         return result.recordset[0];
+    }
+
+    static async updateProfile(userId: number, username: string, avatarUrl: string): Promise<void> {
+        const pool = await poolPromise;
+        await pool.request()
+            .input('User_ID', sql.Int, userId)
+            .input('username', sql.NVarChar, username)
+            .input('avatar_url', sql.NVarChar, avatarUrl)
+            .query(`
+                UPDATE Users 
+                SET username = @username, avatar_url = @avatar_url 
+                WHERE User_ID = @User_ID
+            `);
     }
 }
