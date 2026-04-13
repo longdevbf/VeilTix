@@ -1,15 +1,14 @@
 import sql from 'mssql/msnodesqlv8';
+import 'dotenv/config';
 
-// Sử dụng Explicit Connection String để tránh lỗi ODBC Driver Manager
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.DB_CONNECTION_STRING;
 
 if (!connectionString) {
-    throw new Error('Please define the DATABASE_URL environment variable inside .env.local');
+    throw new Error('❌ Missing DB_CONNECTION_STRING in .env');
 }
 
 const sqlConfig: any = {
-    connectionString: connectionString,
-    // Thông báo cho thư viện mssql biết là dùng driver native
+    connectionString,
     driver: 'msnodesqlv8'
 };
 

@@ -50,6 +50,11 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('Error in POST /api/user:', error);
-    return NextResponse.json({ error: 'Internal server error', details: error.message }, { status: 500 });
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      fs.appendFileSync(path.join(process.cwd(), 'api_error_log.txt'), `${new Date().toISOString()} - Error: ${error.message}\n${error.stack}\n\n`);
+    } catch (e) {}
+    return NextResponse.json({ error: error.message || 'Internal server error', details: error.stack }, { status: 500 });
   }
 }
