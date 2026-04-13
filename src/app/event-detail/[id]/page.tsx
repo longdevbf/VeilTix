@@ -45,7 +45,7 @@ export default function EventDetailPage() {
       <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white p-6">
         <h1 className="text-2xl font-bold mb-4">{error || "Event not found"}</h1>
         <button onClick={() => router.back()} className="text-orange-400 hover:underline flex items-center gap-2">
-           <ArrowLeft size={18} /> Go Back
+          <ArrowLeft size={18} /> Go Back
         </button>
       </div>
     )
@@ -59,7 +59,7 @@ export default function EventDetailPage() {
 
       <div className="max-w-6xl mx-auto px-6 py-12 relative z-10">
         {/* Back Button */}
-        <button 
+        <button
           onClick={() => router.back()}
           className="flex items-center gap-2 text-orange-400 hover:text-orange-300 transition mb-8 group"
         >
@@ -73,8 +73,8 @@ export default function EventDetailPage() {
             <div className="rounded-2xl overflow-hidden border border-orange-500/20 bg-orange-500/5 mb-8">
               <div className="h-80 bg-gradient-to-br from-orange-500/20 to-orange-600/30 flex items-center justify-center relative">
                 <div className="text-center p-8">
-                   <Calendar size={64} className="text-orange-400 mx-auto mb-4 opacity-50" />
-                   <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 leading-tight">
+                  <Calendar size={64} className="text-orange-400 mx-auto mb-4 opacity-50" />
+                  <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 leading-tight">
                     {event.title}
                   </h1>
                 </div>
@@ -129,8 +129,8 @@ export default function EventDetailPage() {
                 <div className="space-y-6">
                   <div>
                     <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-                       <Info size={24} className="text-orange-400" />
-                       About this event
+                      <Info size={24} className="text-orange-400" />
+                      About this event
                     </h2>
                     <p className="text-white/70 leading-relaxed text-lg">
                       {event.description}
@@ -139,8 +139,8 @@ export default function EventDetailPage() {
 
                   <div className="p-6 rounded-xl bg-white/5 border border-white/10">
                     <h3 className="font-bold mb-4 flex items-center gap-2">
-                       <Ticket size={18} className="text-orange-400" />
-                       Ticket Tiers
+                      <Ticket size={18} className="text-orange-400" />
+                      Ticket Tiers
                     </h3>
                     <div className="space-y-4">
                       {event.tiers && event.tiers.length > 0 ? (
@@ -171,8 +171,8 @@ export default function EventDetailPage() {
                   <p className="text-white/60 text-sm mb-1 uppercase tracking-widest font-bold">Starting From</p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-extrabold text-white">
-                      {event.tiers && event.tiers.length > 0 
-                        ? Math.min(...event.tiers.map((t: any) => t.price)) 
+                      {event.tiers && event.tiers.length > 0
+                        ? Math.min(...event.tiers.map((t: any) => t.price))
                         : "TBA"}
                     </span>
                     <span className="text-2xl font-bold text-orange-400">ETH</span>
@@ -206,16 +206,16 @@ export default function EventDetailPage() {
               {/* Organizer & Contract Info */}
               <div className="p-6 rounded-2xl border border-white/10 bg-white/5 space-y-4">
                 <div>
-                   <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-3">Organizer Wallet</p>
-                   <p className="font-mono text-xs text-orange-400 break-all bg-black/30 p-2 rounded">
-                      {event.Wallet_ID || "Main Organizer"}
-                   </p>
+                  <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-3">Organizer Wallet</p>
+                  <p className="font-mono text-xs text-orange-400 break-all bg-black/30 p-2 rounded">
+                    {event.Wallet_ID || "Main Organizer"}
+                  </p>
                 </div>
                 {event.contract_address && (
                   <div>
                     <p className="text-white/40 text-xs uppercase tracking-widest font-bold mb-3">Contract Address</p>
                     <p className="font-mono text-xs text-blue-400 break-all bg-black/30 p-2 rounded">
-                       {event.contract_address}
+                      {event.contract_address}
                     </p>
                   </div>
                 )}
