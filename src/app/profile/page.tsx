@@ -1,27 +1,81 @@
 "use client"
 
-import { useState } from "react"
-import { Mail, MapPin, Copy, Check, Ticket, TrendingUp, Calendar, ExternalLink } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
+import { Mail, MapPin, Copy, Check, Ticket, TrendingUp, Calendar, ExternalLink, Edit2, Save, Camera, X } from "lucide-react"
 import Link from "next/link"
+import { useWallet } from "@/components/context/walletContext"
+import { IUserSession } from "@/interfaces/walletContextType"
 
 export default function ProfilePage() {
+  const { user: rawUser, address, refreshUser, isConnected } = useWallet()
+  const user = rawUser as IUserSession | null;
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
+  
+  // Edit Profile States
+  const [isEditing, setIsEditing] = useState(false)
+  const [username, setUsername] = useState("")
+  const [avatar, setAvatar] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const walletAddress = "0x1234567890abcdef1234567890abcdef12345678"
+  useEffect(() => {
+    if (user) {
+      setUsername(user.username || user.email.split('@')[0])
+      setAvatar(user.avatar_url || "")
+    }
+  }, [user])
 
   const copyAddress = () => {
-    navigator.clipboard.writeText(walletAddress)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    if (address) {
+      navigator.clipboard.writeText(address)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setAvatar(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!user) return
+    setIsSaving(true)
+    try {
+      const res = await fetch('/api/user', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.User_ID,
+          username: username,
+          avatar_url: avatar
+        })
+      })
+
+      if (res.ok) {
+        await refreshUser()
+        setIsEditing(false)
+      }
+    } catch (err) {
+      console.error("Failed to save profile:", err)
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const userData = {
-    username: "Crypto Fan",
-    email: "user@example.com",
-    location: "Ho Chi Minh City, Vietnam",
-    joinDate: "January 2024",
-    totalTickets: 12,
+    username: username || (user?.email?.split('@')[0]) || "Crypto Fan",
+    email: user?.email || "user@example.com",
+    location: "Vietnam",
+    joinDate: user?.created_at ? new Date(user.created_at).toLocaleDateString() : "January 2024",
+    totalTickets: 12, // Still mock for now, can be calculated later
     totalSpent: "$2,450",
     eventsAttended: 8,
   }
@@ -111,37 +165,90 @@ export default function ProfilePage() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-8 mb-8">
             {/* Avatar */}
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-4xl font-bold">
-              CF
+            <div className="relative group">
+               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-4xl font-bold overflow-hidden border-2 border-orange-500/20 shadow-2xl shadow-orange-500/10">
+                 {avatar ? (
+                   <img src={avatar} alt="Profile" className="w-full h-full object-cover" />
+                 ) : (
+                   userData.username.charAt(0).toUpperCase()
+                 )}
+               </div>
+               {isEditing && (
+                 <button 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition duration-300"
+                 >
+                   <Camera size={24} />
+                 </button>
+               )}
+               <input 
+                 type="file" 
+                 ref={fileInputRef} 
+                 onChange={handleFileChange} 
+                 className="hidden" 
+                 accept="image/*" 
+               />
             </div>
 
             {/* User Info */}
             <div className="flex-1">
-              <h1 className="text-4xl font-bold text-white mb-2">{userData.username}</h1>
+              <div className="flex items-center gap-4 mb-2">
+                {isEditing ? (
+                  <input 
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="bg-white/5 border border-orange-500/30 rounded-lg px-4 py-2 text-3xl font-bold text-white outline-none focus:border-orange-500 transition w-full max-w-md"
+                    placeholder="Enter username..."
+                  />
+                ) : (
+                  <h1 className="text-4xl font-bold text-white">{userData.username}</h1>
+                )}
+                
+                <button 
+                  onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                  disabled={isSaving}
+                  className={`p-2 rounded-full transition ${isEditing ? "bg-green-500/20 text-green-400 hover:bg-green-500/30" : "bg-white/5 text-white/40 hover:text-white hover:bg-white/10"}`}
+                >
+                  {isSaving ? "..." : isEditing ? <Save size={20} /> : <Edit2 size={20} />}
+                </button>
+                {isEditing && (
+                   <button 
+                    onClick={() => {
+                      setIsEditing(false)
+                      setUsername(user?.username || user?.email.split('@')[0] || "")
+                      setAvatar(user?.avatar_url || "")
+                    }}
+                    className="p-2 rounded-full bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
+                   >
+                     <X size={20} />
+                   </button>
+                )}
+              </div>
+              
               <div className="space-y-2 text-white/70">
                 <div className="flex items-center gap-2">
-                  <Mail size={16} />
+                  <Mail size={16} className="text-orange-400/50" />
                   <span>{userData.email}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <MapPin size={16} />
+                  <MapPin size={16} className="text-orange-400/50" />
                   <span>{userData.location}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar size={16} />
+                  <Calendar size={16} className="text-orange-400/50" />
                   <span>Joined {userData.joinDate}</span>
                 </div>
               </div>
             </div>
 
             {/* Wallet Address */}
-            <div className="bg-black/50 border border-orange-500/30 rounded-lg p-6 w-full md:w-80">
-              <p className="text-white/60 text-sm mb-3">Connected Wallet</p>
+            <div className="bg-black/50 backdrop-blur-md border border-orange-500/30 rounded-2xl p-6 w-full md:w-80 shadow-xl">
+              <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-3">Connected Wallet</p>
               <div className="flex items-center justify-between gap-2 mb-4">
-                <code className="text-orange-400 font-mono text-sm break-all">{walletAddress}</code>
+                <code className="text-orange-400 font-mono text-sm break-all">{address || "0x..."}</code>
                 <button
                   onClick={copyAddress}
-                  className="p-2 hover:bg-orange-500/10 rounded transition"
+                  className="p-2 hover:bg-orange-500/10 rounded-xl transition"
                   title="Copy address"
                 >
                   {copied ? (
@@ -152,10 +259,10 @@ export default function ProfilePage() {
                 </button>
               </div>
               <a
-                href={`https://etherscan.io/address/${walletAddress}`}
+                href={`https://etherscan.io/address/${address}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-orange-400 hover:text-orange-300 transition text-sm"
+                className="inline-flex items-center gap-2 text-orange-400 hover:text-orange-300 transition text-xs font-bold"
               >
                 View on Etherscan
                 <ExternalLink size={14} />

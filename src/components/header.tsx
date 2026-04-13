@@ -17,7 +17,6 @@ export function Header() {
   const navItems = [
     { label: "Create", href: "/create", role: "organizer" },
     { label: "Events", href: "/events" },
-    { label: "Check-in", href: "/check-in", role: "organizer" },
     { label: "Market", href: "/market" },
     { label: "About Us", href: "/about" },
     { label: "Contact", href: "/contact" },
@@ -26,7 +25,7 @@ export function Header() {
   const filteredNavItems = navItems.filter(item => {
     if (!item.role) return true;
     if (!user) return false;
-    return user.role === item.role;
+    return user.role.toLowerCase() === item.role.toLowerCase();
   });
 
   const isActive = (href: string) =>
@@ -84,13 +83,17 @@ export function Header() {
             <div className="relative">
               <button 
                 onClick={() => setProfileOpen(!profileOpen)}
-                className={`flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-300 ${
+                className={`flex items-center justify-center w-10 h-10 rounded-full border transition-all duration-300 overflow-hidden ${
                   profileOpen 
                     ? "bg-orange-500 text-white border-orange-500 shadow-lg shadow-orange-500/20" 
                     : "bg-white/5 border-white/10 text-white hover:border-orange-500/50"
                 }`}
               >
-                <User size={20} />
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={20} />
+                )}
               </button>
 
               {profileOpen && (
@@ -101,18 +104,22 @@ export function Header() {
                   <div className="absolute right-0 mt-4 w-72 bg-black/90 backdrop-blur-2xl border border-white/10 rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in duration-200">
                     <div className="mb-6 pb-6 border-b border-white/5">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20">
-                          <User size={24} />
-                        </div>
-                        <div>
-                          <span className="inline-block px-2 py-0.5 rounded-md bg-orange-500/10 text-[10px] text-orange-400 font-bold uppercase tracking-widest mb-1">
-                            {user.role}
-                          </span>
-                          <p className="text-sm font-bold text-white max-w-[160px] truncate">
-                            {user.email.split('@')[0]}
-                          </p>
-                          <p className="text-[10px] text-white/40 truncate italic">{user.email}</p>
-                        </div>
+                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 border border-orange-500/20 overflow-hidden">
+                  {user.avatar_url ? (
+                    <img src={user.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={24} />
+                  )}
+                </div>
+                <div>
+                  <span className="inline-block px-2 py-0.5 rounded-md bg-orange-500/10 text-[10px] text-orange-400 font-bold uppercase tracking-widest mb-1">
+                    {user.role}
+                  </span>
+                  <p className="text-sm font-bold text-white max-w-[160px] truncate">
+                    {user.username || user.email.split('@')[0]}
+                  </p>
+                  <p className="text-[10px] text-white/40 truncate italic">{user.email}</p>
+                </div>
                       </div>
                     </div>
 
