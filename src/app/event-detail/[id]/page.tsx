@@ -4,6 +4,12 @@ import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Calendar, MapPin, Users, ArrowLeft, Share2, Shield, Ticket, Clock, Info } from "lucide-react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
+
+const EventMap = dynamic(() => import("@/components/event/EventMap"), {
+  ssr: false,
+  loading: () => <div className="w-full h-64 bg-white/5 animate-pulse rounded-xl mt-6 border border-white/10" />
+});
 
 export default function EventDetailPage() {
   const params = useParams()
@@ -135,6 +141,12 @@ export default function EventDetailPage() {
                     <p className="text-white/70 leading-relaxed text-lg">
                       {event.description}
                     </p>
+                    {/* Location Map */}
+                    <EventMap 
+                      location={event.location} 
+                      latitude={event.latitude}
+                      longitude={event.longitude}
+                    />
                   </div>
 
                   <div className="p-6 rounded-xl bg-white/5 border border-white/10">

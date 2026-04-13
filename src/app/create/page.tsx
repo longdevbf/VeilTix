@@ -7,6 +7,12 @@ import { parseEther } from "viem"
 import { Calendar, MapPin, AlignLeft, Image as ImageIcon, Plus, Trash2, Info, Loader2, AlertCircle, Lock, Users, Clock, Shield } from "lucide-react"
 import { useWallet } from "@/components/context/walletContext"
 import Link from "next/link"
+import dynamic from "next/dynamic"
+
+const LocationSelector = dynamic(() => import("@/components/event/LocationSelector"), {
+  ssr: false,
+  loading: () => <div className="w-full h-12 bg-white/5 animate-pulse rounded-2xl" />
+});
 
 export default function CreatePage() {
   const { user, isConnected, isLoading: isAuthLoading } = useWallet()
@@ -18,6 +24,12 @@ export default function CreatePage() {
   const [startTime, setStartTime] = useState("")
   const [endTime, setEndTime] = useState("")
   const [image, setImage] = useState<string | null>(null)
+
+  // Location Verification Specs
+  const [isOnline, setIsOnline] = useState(false)
+  const [lat, setLat] = useState<number | undefined>()
+  const [lng, setLng] = useState<number | undefined>()
+  const [isVerified, setIsVerified] = useState(false)
 
   const resizeImage = (file: File): Promise<string> => {
     return new Promise((resolve) => {
@@ -134,6 +146,13 @@ export default function CreatePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validation
+    if (!isOnline && !isVerified) {
+      setError("Please search and confirm the event location on the map.")
+      return
+    }
+
     setIsMinting(true)
     setError(null)
 
@@ -176,6 +195,9 @@ export default function CreatePage() {
         contract_address: VEILTIX_ADDRESS,
         status: "active",
         event_image: image,
+        is_online: isOnline,
+        latitude: lat,
+        longitude: lng,
         tiers: tiers.map(t => ({
           tier: t.tier,
           price: parseFloat(t.price),
@@ -272,16 +294,48 @@ export default function CreatePage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-bold text-white/50 ml-1 uppercase">Location</label>
-                  <div className="relative">
-                    <MapPin size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-500/50" />
-                    <input 
-                      required value={location} onChange={e => setLocation(e.target.value)}
-                      placeholder="Venue or Link for Online event"
-                      className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-orange-500/50 transition"
-                    />
+                <div className="space-y-4">
+                  <label className="text-sm font-bold text-white/50 ml-1 uppercase">Event Type & Location</label>
+                  
+                  <div className="flex p-1 bg-black/40 border border-white/10 rounded-2xl w-fit mb-4">
+                    <button
+                      type="button"
+                      onClick={() => { setIsOnline(false); setIsVerified(false); }}
+                      className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${!isOnline ? 'bg-orange-500 text-white' : 'text-white/40 hover:text-white'}`}
+                    >
+                      Offline / Venue
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setIsOnline(true); setIsVerified(true); setLocation(""); }}
+                      className={`px-6 py-2 rounded-xl text-sm font-bold transition-all ${isOnline ? 'bg-orange-500 text-white' : 'text-white/40 hover:text-white'}`}
+                    >
+                      Online / Virtual
+                    </button>
                   </div>
+
+                  {isOnline ? (
+                    <div className="relative animate-in fade-in slide-in-from-left-4">
+                      <Shield size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-500/50" />
+                      <input 
+                        required value={location} onChange={e => setLocation(e.target.value)}
+                        placeholder="Link to Zoom, Google Meet, or Virtual World"
+                        className="w-full bg-black/40 border border-white/10 rounded-2xl py-4 pl-12 pr-4 outline-none focus:border-orange-500/50 transition"
+                      />
+                    </div>
+                  ) : (
+                    <div className="animate-in fade-in slide-in-from-right-4">
+                      <LocationSelector 
+                        onVerify={(addr, latitude, longitude) => {
+                          setLocation(addr);
+                          setLat(latitude);
+                          setLng(longitude);
+                          setIsVerified(true);
+                        }}
+                        initialAddress={location}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -433,8 +487,8 @@ export default function CreatePage() {
 
             <button 
               type="submit" 
-              disabled={isMinting || isConfirming}
-              className="w-full py-6 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-3xl font-extrabold text-lg transition-all shadow-2xl shadow-orange-500/30 flex items-center justify-center gap-3"
+              disabled={isMinting || isConfirming || (!isOnline && !isVerified)}
+              className="w-full py-6 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:grayscale text-white rounded-3xl font-extrabold text-lg transition-all shadow-2xl shadow-orange-500/30 flex items-center justify-center gap-3"
             >
                {(isMinting || isConfirming) ? (
                  <>

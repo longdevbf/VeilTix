@@ -75,9 +75,12 @@ export class EventService {
                 .input('contract_address', sql.VarChar, eventData.contract_address)
                 .input('status', sql.VarChar, eventData.status || 'active')
                 .input('event_image', sql.NVarChar(sql.MAX), eventData.event_image)
+                .input('is_online', sql.Bit, eventData.is_online ? 1 : 0)
+                .input('latitude', sql.Decimal(9, 6), eventData.latitude)
+                .input('longitude', sql.Decimal(10, 7), eventData.longitude)
                 .query(`
-                    INSERT INTO Events (Wallet_ID, title, description, location, start_time, end_time, contract_address, status, event_image)
-                    VALUES (@Wallet_ID, @title, @description, @location, @start_time, @end_time, @contract_address, @status, @event_image);
+                    INSERT INTO Events (Wallet_ID, title, description, location, start_time, end_time, contract_address, status, event_image, is_online, latitude, longitude)
+                    VALUES (@Wallet_ID, @title, @description, @location, @start_time, @end_time, @contract_address, @status, @event_image, @is_online, @latitude, @longitude);
                     SELECT SCOPE_IDENTITY() AS id;
                 `);
             
