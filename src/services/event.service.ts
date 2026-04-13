@@ -54,6 +54,14 @@ export class EventService {
         const transaction = new sql.Transaction(pool);
         
         try {
+            if (!eventData.Wallet_ID) {
+                throw new Error("Missing Wallet_ID. User must be logged in.");
+            }
+
+            // Ensure dates are actual Date objects for the driver
+            const startTime = eventData.start_time ? new Date(eventData.start_time) : new Date();
+            const endTime = eventData.end_time ? new Date(eventData.end_time) : new Date();
+
             await transaction.begin();
             const request = new sql.Request(transaction);
             
@@ -62,16 +70,20 @@ export class EventService {
                 .input('title', sql.NVarChar, eventData.title)
                 .input('description', sql.NVarChar(sql.MAX), eventData.description)
                 .input('location', sql.NVarChar, eventData.location)
-                .input('start_time', sql.DateTime2, eventData.start_time)
-                .input('end_time', sql.DateTime2, eventData.end_time)
+                .input('start_time', sql.DateTime2, startTime)
+                .input('end_time', sql.DateTime2, endTime)
                 .input('contract_address', sql.VarChar, eventData.contract_address)
                 .input('status', sql.VarChar, eventData.status || 'active')
-                .input('event_image', sql.VarChar(sql.MAX), eventData.event_image)
+                .input('event_image', sql.NVarChar(sql.MAX), eventData.event_image)
                 .query(`
                     INSERT INTO Events (Wallet_ID, title, description, location, start_time, end_time, contract_address, status, event_image)
                     VALUES (@Wallet_ID, @title, @description, @location, @start_time, @end_time, @contract_address, @status, @event_image);
                     SELECT SCOPE_IDENTITY() AS id;
                 `);
+            
+            if (!result.recordset || result.recordset.length === 0) {
+                throw new Error("Failed to retrieve new Event ID");
+            }
             
             const eventId = result.recordset[0].id;
 
@@ -81,8 +93,8 @@ export class EventService {
                     await new sql.Request(transaction)
                         .input('Event_ID', sql.Int, eventId)
                         .input('tier', sql.NVarChar, tier.tier)
-                        .input('price', sql.Decimal(18, 8), tier.price) // Using 8 decimals for crypto precision if stored as such
-                        .input('max_supply', sql.Int, tier.max_supply)
+                        .input('price', sql.Decimal(18, 8), parseFloat(tier.price.toString()))
+                        .input('max_supply', sql.Int, parseInt(tier.max_supply.toString()))
                         .query(`
                             INSERT INTO Ticket_Tiers (Event_ID, tier, price, max_supply)
                             VALUES (@Event_ID, @tier, @price, @max_supply)
@@ -93,8 +105,10 @@ export class EventService {
             await transaction.commit();
             return eventId;
         } catch (err) {
-            console.error("Database Transaction Error:", err);
-            if (transaction) await transaction.rollback();
+            console.error("FATAL Database Transaction Error:", err);
+            if (transaction) {
+                try { await transaction.rollback(); } catch(e) { /* ignore rollback error if tx not started */ }
+            }
             throw err;
         }
     }
