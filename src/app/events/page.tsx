@@ -3,12 +3,24 @@
 "use client"
 
 import { useMemo, useState, useEffect } from "react"
-import { Calendar, MapPin, Search, Users, ChevronLeft, ChevronRight } from "lucide-react"
+import { Calendar, MapPin, Search, Users, ChevronLeft, ChevronRight, List, Map as MapIcon } from "lucide-react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
+
+const EventsDiscoveryMap = dynamic(() => import("@/components/event/EventsDiscoveryMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-[400px] bg-white/5 animate-pulse rounded-xl flex items-center justify-center border border-white/10">
+      <p className="text-white/40">Loading map...</p>
+    </div>
+  ),
+})
 
 
 export default function EventsPage() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [filterStatus, setFilterStatus] = useState("all")
+  const [viewMode, setViewMode] = useState<"list" | "map">("list")
   const [currentPage, setCurrentPage] = useState(1)
   const EVENTS_PER_PAGE = 9
 
@@ -33,20 +45,25 @@ export default function EventsPage() {
   }, [])
 
   const filteredEvents = useMemo(() => {
-    return events.filter((event) =>
-      event.title.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [searchTerm, events])
+    return events.filter((event) => {
+      const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase())
+      
+      let matchesStatus = true
+      if (filterStatus === "online") matchesStatus = event.is_online === true || event.is_online === 1
+      if (filterStatus === "offline") matchesStatus = event.is_online === false || event.is_online === 0 || event.is_online == null
 
+      return matchesSearch && matchesStatus
+    })
+  }, [searchTerm, filterStatus, events])
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredEvents.length / EVENTS_PER_PAGE)
   const startIndex = (currentPage - 1) * EVENTS_PER_PAGE
   const paginatedEvents = filteredEvents.slice(startIndex, startIndex + EVENTS_PER_PAGE)
 
-  // Reset to page 1 when search term changes
-  const handleSearch = (value: string) => {
-    setSearchTerm(value)
+  // Reset to page 1 when filters change
+  const handleFilterChange = (setter: any, value: string) => {
+    setter(value)
     setCurrentPage(1)
   }
 
@@ -66,21 +83,62 @@ export default function EventsPage() {
             Explore upcoming blockchain-powered events
           </p>
 
-          <div className="relative max-w-md mb-12">
-            <Search
-              className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-400"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Search by event name..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full rounded-lg border border-orange-500/30 bg-orange-500/5 py-3 pl-12 pr-4 text-white placeholder:text-white/40 outline-none transition focus:border-orange-400 focus:bg-orange-500/10"
-            />
+          <div className="flex flex-col md:flex-row gap-4 mb-12 items-center">
+            <div className="relative w-full md:w-96">
+              <Search
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-orange-400"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder="Search by event name..."
+                value={searchTerm}
+                onChange={(e) => handleFilterChange(setSearchTerm, e.target.value)}
+                className="w-full rounded-lg border border-orange-500/30 bg-orange-500/5 py-3 pl-12 pr-4 text-white placeholder:text-white/40 outline-none transition focus:border-orange-400 focus:bg-orange-500/10"
+              />
+            </div>
+
+            <select
+              value={filterStatus}
+              onChange={(e) => handleFilterChange(setFilterStatus, e.target.value)}
+              className="w-full md:w-auto rounded-lg border border-orange-500/30 bg-orange-500/5 py-3 px-4 text-white outline-none transition focus:border-orange-400 focus:bg-orange-500/10 appearance-none cursor-pointer"
+            >
+              <option value="all" className="bg-black text-white">All Event Types</option>
+              <option value="online" className="bg-black text-white">Online Events</option>
+              <option value="offline" className="bg-black text-white">In-Person Events</option>
+            </select>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="flex justify-end mb-8">
+            <div className="flex items-center gap-1 p-1 bg-white/5 rounded-lg border border-white/10">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition ${
+                  viewMode === "list" ? "bg-orange-500 text-white" : "text-white/60 hover:text-white"
+                }`}
+              >
+                <List size={18} />
+                <span className="font-semibold text-sm">List</span>
+              </button>
+              <button
+                onClick={() => setViewMode("map")}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition ${
+                  viewMode === "map" ? "bg-orange-500 text-white" : "text-white/60 hover:text-white"
+                }`}
+              >
+                <MapIcon size={18} />
+                <span className="font-semibold text-sm">Map</span>
+              </button>
+            </div>
+          </div>
+
+          {viewMode === "map" && filteredEvents.length > 0 && (
+            <div className="mb-12">
+              <EventsDiscoveryMap events={filteredEvents} />
+            </div>
+          )}
+
+          <div className={`grid md:grid-cols-3 gap-8 ${viewMode === "map" ? "hidden" : ""}`}>
             {loading ? (
               <div className="col-span-full py-20 text-center">
                 <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
@@ -144,7 +202,7 @@ export default function EventsPage() {
           </div>
 
           {filteredEvents.length > 0 && (
-            <div className="mt-16 flex flex-col items-center gap-8">
+            <div className={`mt-16 flex flex-col items-center gap-8 ${viewMode === "map" ? "hidden" : ""}`}>
               {/* Pagination Info */}
               <div className="text-white/60 text-sm">
                 Showing {startIndex + 1} to {Math.min(startIndex + EVENTS_PER_PAGE, filteredEvents.length)} of {filteredEvents.length} events
@@ -190,10 +248,10 @@ export default function EventsPage() {
             </div>
           )}
 
-          {filteredEvents.length === 0 && searchTerm && (
+          {filteredEvents.length === 0 && (searchTerm || filterStatus !== "all") && (
             <div className="text-center mt-16">
               <p className="text-white/60 text-lg">
-                No events found for &quot;{searchTerm}&quot;
+                No events found matching your filters.
               </p>
             </div>
           )}
