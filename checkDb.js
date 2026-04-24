@@ -1,6 +1,12 @@
+require('dotenv').config();
 const sql = require('mssql/msnodesqlv8');
 
-const connectionString = 'Driver={ODBC Driver 17 for SQL Server};Server=DESKTOP-21ISSDL;Database=VeilTixDB;Trusted_Connection=yes;';
+const connectionString = process.env.DB_CONNECTION_STRING;
+
+if (!connectionString) {
+    console.error('❌ Missing DB_CONNECTION_STRING in .env');
+    process.exit(1);
+}
 
 const sqlConfig = {
     connectionString: connectionString,
