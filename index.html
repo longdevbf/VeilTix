@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Transactions | Midnight Explorer</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "surface-tint": "#006688",
+                "primary-fixed-dim": "#75d1ff",
+                "error-container": "#ffdad6",
+                "tertiary-fixed": "#d8e4f1",
+                "on-error-container": "#93000a",
+                "secondary-fixed": "#d5e3ff",
+                "tertiary-container": "#8d99a5",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-container": "#26313b",
+                "on-primary-fixed": "#001e2b",
+                "surface-variant": "#e2e2e2",
+                "secondary-container": "#d2e0fd",
+                "on-surface": "#1a1c1c",
+                "primary-fixed": "#c2e8ff",
+                "on-secondary-container": "#55637c",
+                "surface-container-low": "#f3f3f4",
+                "on-secondary": "#ffffff",
+                "on-tertiary-fixed-variant": "#3c4853",
+                "secondary-fixed-dim": "#b9c7e3",
+                "outline-variant": "#bdc8d0",
+                "surface-bright": "#f9f9f9",
+                "secondary": "#515f77",
+                "on-secondary-fixed-variant": "#3a475f",
+                "on-primary-container": "#003447",
+                "surface-container-high": "#e8e8e8",
+                "inverse-on-surface": "#f0f1f1",
+                "tertiary": "#54606b",
+                "primary": "#006688",
+                "outline": "#6e7980",
+                "on-secondary-fixed": "#0d1c31",
+                "on-primary-fixed-variant": "#004d67",
+                "primary-container": "#00a3d7",
+                "on-surface-variant": "#3e484f",
+                "on-error": "#ffffff",
+                "tertiary-fixed-dim": "#bcc8d5",
+                "on-primary": "#ffffff",
+                "surface-container-highest": "#e2e2e2",
+                "on-background": "#1a1c1c",
+                "inverse-primary": "#75d1ff",
+                "error": "#ba1a1a",
+                "background": "#f9f9f9",
+                "on-tertiary": "#ffffff",
+                "on-tertiary-fixed": "#111d26",
+                "surface-dim": "#dadada",
+                "surface-container": "#eeeeee",
+                "inverse-surface": "#2f3131",
+                "surface": "#f9f9f9"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.125rem",
+                "lg": "0.25rem",
+                "xl": "0.5rem",
+                "full": "0.75rem"
+            },
+            "fontFamily": {
+                "headline": ["Inter"],
+                "body": ["Inter"],
+                "label": ["Inter"]
+            }
+          }
+        }
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9f9; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- TopNavBar -->
+<header class="bg-white dark:bg-slate-900 shadow-[0_4px_20px_rgba(6,21,42,0.04)] sticky top-0 z-50">
+<nav class="flex justify-between items-center px-8 py-4 max-w-[1440px] mx-auto font-['Inter'] antialiased">
+<div class="flex items-center gap-8">
+<span class="text-xl font-bold tracking-tight text-[#1a1c1c] dark:text-white">Midnight Explorer</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="text-[#3e484f] dark:text-slate-400 font-medium hover:text-[#006688] transition-colors duration-200 cursor-pointer active:opacity-80" href="#">Dashboard</a>
+<a class="text-[#3e484f] dark:text-slate-400 font-medium hover:text-[#006688] transition-colors duration-200 cursor-pointer active:opacity-80" href="#">Blocks</a>
+<a class="text-[#006688] dark:text-[#00a3d7] font-semibold border-b-2 border-[#006688] pb-1 cursor-pointer active:opacity-80" href="#">Transactions</a>
+<a class="text-[#3e484f] dark:text-slate-400 font-medium hover:text-[#006688] transition-colors duration-200 cursor-pointer active:opacity-80" href="#">Nodes</a>
+<a class="text-[#3e484f] dark:text-slate-400 font-medium hover:text-[#006688] transition-colors duration-200 cursor-pointer active:opacity-80" href="#">Governance</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden lg:block">
+<input class="bg-surface-container-low border-none rounded-xl px-4 py-2 text-sm w-64 focus:ring-2 focus:ring-primary-container" placeholder="Search by Hash / Address" type="text"/>
+<span class="material-symbols-outlined absolute right-3 top-2 text-on-surface-variant" style="font-size: 18px;">search</span>
+</div>
+<span class="material-symbols-outlined text-[#3e484f] cursor-pointer hover:text-[#006688] transition-colors duration-200">settings</span>
+<span class="material-symbols-outlined text-[#3e484f] cursor-pointer hover:text-[#006688] transition-colors duration-200">account_circle</span>
+</div>
+</nav>
+</header>
+<main class="max-w-[1440px] mx-auto px-8 py-8">
+<!-- Hero Section Tone -->
+<div class="mb-6 flex items-baseline gap-2">
+<h1 class="text-xl font-bold tracking-tight text-on-surface">Transactions</h1>
+<span class="text-on-surface-variant text-xs font-medium bg-surface-container px-2 py-0.5 rounded">API</span>
+</div>
+<!-- Stats Bento Grid - Compact Version -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="bg-white rounded-xl p-4 shadow-sm border border-surface-container">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Transactions (24H)</p>
+<div class="flex items-baseline gap-1.5">
+<h3 class="text-base font-bold text-on-surface">2,302,049</h3>
+<span class="text-[10px] font-bold text-red-500">(5.21%)</span>
+</div>
+</div>
+<div class="bg-white rounded-xl p-4 shadow-sm border border-surface-container">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Pending Transactions (Last 1H)</p>
+<div class="flex items-baseline gap-1.5">
+<h3 class="text-base font-bold text-on-surface">106,680</h3>
+<span class="text-[10px] font-medium text-on-surface-variant opacity-60">(Average)</span>
+</div>
+</div>
+<div class="bg-white rounded-xl p-4 shadow-sm border border-surface-container">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Total Transaction Fee (24H)</p>
+<div class="flex items-baseline gap-1.5">
+<h3 class="text-base font-bold text-on-surface">83.00 Night</h3>
+<span class="text-[10px] font-bold text-red-500">(33.58%)</span>
+</div>
+</div>
+<div class="bg-white rounded-xl p-4 shadow-sm border border-surface-container">
+<p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-wider mb-1">Avg. Transaction Fee (24H)</p>
+<div class="flex items-baseline gap-1.5">
+<h3 class="text-base font-bold text-on-surface">0.00042 NGT</h3>
+<span class="text-[10px] font-bold text-red-500">(25.15%)</span>
+</div>
+</div>
+</div>
+<!-- Main Data Table Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(6,21,42,0.04)] overflow-hidden">
+<div class="px-8 py-5 flex justify-between items-center border-b border-surface-container">
+<div class="flex flex-col">
+<h2 class="text-sm font-semibold text-on-surface">More than 3,372,843,648 transactions found</h2>
+<p class="text-[10px] text-on-surface-variant">(Showing the last 500k records)</p>
+</div>
+<div class="flex gap-2">
+<button class="bg-surface-container-low text-on-surface text-[11px] px-3 py-1.5 rounded font-medium hover:bg-surface-container transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined" style="font-size: 14px;">download</span> Download Page Data
+</button>
+<div class="flex items-center gap-1">
+<button class="px-2 py-1 bg-surface-container-low text-[10px] rounded hover:bg-surface-container">First</button>
+<button class="px-2 py-1 bg-surface-container-low text-[10px] rounded hover:bg-surface-container">
+<span class="material-symbols-outlined" style="font-size: 12px;">chevron_left</span>
+</button>
+<span class="text-[10px] px-2 text-on-surface-variant">Page 1 of 10000</span>
+<button class="px-2 py-1 bg-surface-container-low text-[10px] rounded hover:bg-surface-container">
+<span class="material-symbols-outlined" style="font-size: 12px;">chevron_right</span>
+</button>
+<button class="px-2 py-1 bg-surface-container-low text-[10px] rounded hover:bg-surface-container">Last</button>
+</div>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-white border-b border-surface-container">
+<th class="px-6 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Transaction Hash</th>
+<th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Method</th>
+<th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Block</th>
+<th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">Age</th>
+<th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">From</th>
+<th class="px-2 py-3 text-center"></th>
+<th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider">To</th>
+<th class="px-4 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider text-right">Amount</th>
+<th class="px-6 py-3 text-[10px] font-bold text-on-surface-variant uppercase tracking-wider text-right">Txn Fee</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container text-[12px]">
+<!-- Rows repeated for 15+ entries -->
+<script>
+    const methods = ["Transfer", "Swap", "Approve", "Mint", "Deposit"];
+    const rows = 18;
+    for(let i=0; i<rows; i++) {
+        const method = methods[Math.floor(Math.random() * methods.length)];
+        const hash = "0x" + Math.random().toString(16).slice(2, 8) + "..." + Math.random().toString(16).slice(2, 6);
+        const block = 24807817 - i;
+        const from = "0x" + Math.random().toString(16).slice(2, 5) + "..." + Math.random().toString(16).slice(2, 5);
+        const to = "0x" + Math.random().toString(16).slice(2, 5) + "..." + Math.random().toString(16).slice(2, 5);
+        const amount = (Math.random() * 20).toFixed(4);
+        const fee = (Math.random() * 0.001).toFixed(6);
+
+        document.write(`
+        <tr class="group hover:bg-blue-50/30 transition-colors">
+            <td class="px-6 py-3">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-on-surface-variant/40" style="font-size: 16px;">visibility</span>
+                    <span class="text-primary font-medium cursor-pointer hover:underline">${hash}</span>
+                </div>
+            </td>
+            <td class="px-4 py-3">
+                <span class="border border-surface-container bg-surface-container-low text-[9px] font-bold px-1.5 py-0.5 rounded uppercase text-on-surface-variant">${method}</span>
+            </td>
+            <td class="px-4 py-3 text-primary font-medium">${block.toLocaleString()}</td>
+            <td class="px-4 py-3 text-on-surface-variant">${i * 12 + 10} secs ago</td>
+            <td class="px-4 py-3 text-primary truncate max-w-[100px]">${from}</td>
+            <td class="px-2 py-3 text-center">
+                <div class="w-5 h-5 bg-emerald-50 rounded-full flex items-center justify-center">
+                    <span class="material-symbols-outlined text-emerald-600" style="font-size: 14px;">arrow_forward</span>
+                </div>
+            </td>
+            <td class="px-4 py-3 text-primary truncate max-w-[100px]">${to}</td>
+            <td class="px-4 py-3 text-right">
+                <span class="font-medium text-on-surface">${amount} Night</span>
+            </td>
+            <td class="px-6 py-3 text-right text-on-surface-variant text-[10px]">${fee}</td>
+        </tr>
+        `);
+    }
+</script>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination -->
+<div class="px-8 py-4 bg-white border-t border-surface-container flex justify-end items-center text-xs font-medium gap-2">
+<button class="px-3 py-1 bg-surface-container-low rounded text-on-surface-variant hover:bg-surface-container">First</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-container-low text-on-surface-variant hover:bg-surface-container">
+<span class="material-symbols-outlined" style="font-size: 16px;">chevron_left</span>
+</button>
+<span class="px-3 py-1 bg-primary text-white rounded">1</span>
+<span class="px-3 py-1 bg-surface-container-low rounded hover:bg-surface-container cursor-pointer">2</span>
+<span class="px-3 py-1 bg-surface-container-low rounded hover:bg-surface-container cursor-pointer">3</span>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-surface-container-low text-on-surface-variant hover:bg-surface-container">
+<span class="material-symbols-outlined" style="font-size: 16px;">chevron_right</span>
+</button>
+<button class="px-3 py-1 bg-surface-container-low rounded text-on-surface-variant hover:bg-surface-container">Last</button>
+</div>
+</div>
+<!-- Decorative Info Section -->
+<div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+<div class="relative rounded-xl overflow-hidden h-[300px] shadow-sm">
+<img alt="Blockchain visualization" class="absolute inset-0 w-full h-full object-cover" data-alt="Abstract digital visualization of blockchain nodes connecting in a network with glowing blue particles and high-tech aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaj-Fr9IjvAhh3Syd8A2QxqVFPn5WXSDuVdEV5GXTQjfMmUdvjiB2nemXsEEiKu-XFb6XijbYQhyms58X0W7la0wHNvgfCdO6Ef9GCiOqYt8-oEtBHleBVKkrpJ0aS2qrunv1WA_pdPZh-Jh0DtlP1NWtZvlCXR-6MkegwTRhW9kb0zD-g9FzpfwnnCe8kr-VLaJk39pqLtCvA6lQnfnaXxFBesoBghujByaTpeErwci5J7ZVuQG5X7ct-ickIlXhY-2s1-E2W4sd4"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-8">
+<h3 class="text-white text-xl font-bold mb-2">Secure &amp; Transparent</h3>
+<p class="text-white/80 text-sm">Every Night transaction is cryptographically secured and permanent on the ledger.</p>
+</div>
+</div>
+<div class="space-y-6">
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">speed</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface text-sm">Sub-second Finality</h4>
+<p class="text-xs text-on-surface-variant">The Night Network processes blocks in under 400ms, ensuring your transactions are confirmed almost instantly.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-12 h-12 rounded-xl bg-primary-fixed flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">eco</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface text-sm">Eco-Friendly Architecture</h4>
+<p class="text-xs text-on-surface-variant">Built on advanced Proof-of-Stake, our network consumes 99.9% less energy than traditional proof-of-work systems.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-[#06152a] dark:bg-[#020617] w-full mt-auto">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 px-12 py-12 w-full max-w-[1440px] mx-auto font-['Inter'] text-xs">
+<div>
+<span class="text-base font-bold text-white block mb-4">Midnight Explorer</span>
+<p class="text-slate-400 max-w-sm mb-6">The authoritative ledger for the Night Network. Providing transparency and real-time data for the next generation of decentralized applications.</p>
+<p class="text-slate-500 text-[10px]">© 2024 Midnight Explorer. Built for the Night Network.</p>
+</div>
+<div class="grid grid-cols-2 gap-8">
+<div class="flex flex-col gap-3">
+<span class="text-white font-bold uppercase text-[10px] tracking-widest mb-2">Network</span>
+<a class="text-slate-400 hover:text-[#00a3d7] transition-all inline-block hover:translate-x-1 duration-150" href="#">API Documentation</a>
+<a class="text-slate-400 hover:text-[#00a3d7] transition-all inline-block hover:translate-x-1 duration-150" href="#">Network Status</a>
+<a class="text-slate-400 hover:text-[#00a3d7] transition-all inline-block hover:translate-x-1 duration-150" href="#">Knowledge Base</a>
+</div>
+<div class="flex flex-col gap-3">
+<span class="text-white font-bold uppercase text-[10px] tracking-widest mb-2">Legal</span>
+<a class="text-slate-400 hover:text-[#00a3d7] transition-all inline-block hover:translate-x-1 duration-150" href="#">Terms of Service</a>
+<a class="text-slate-400 hover:text-[#00a3d7] transition-all inline-block hover:translate-x-1 duration-150" href="#">Privacy Policy</a>
+</div>
+</div>
+</div>
+</footer>
+</body></html>

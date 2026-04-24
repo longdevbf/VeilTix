@@ -1,0 +1,175 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  user_id     BigInt   @id @default(autoincrement())
+  email       String?  @unique @db.VarChar(255)
+  username    String?  @db.VarChar(255)
+  image       String?  @db.Text
+  description String?  @db.Text
+  created_at  DateTime @default(now())
+
+  wallets     Wallet[]
+  @@map("users")
+}
+
+model Wallet {
+  wallet_id      BigInt   @id @default(autoincrement())
+  user_id        BigInt
+  address_wallet String   @unique @db.VarChar(255)
+  role           String?  @db.VarChar(50)
+
+  user           User     @relation(fields: [user_id], references: [user_id])
+  events         Event[]
+  orders         Order[]
+  transaction_histories TransactionHistory[]
+  @@map("wallets")
+}
+
+model Event {
+  event_id         BigInt   @id @default(autoincrement())
+  wallet_id        BigInt
+  title            String   @db.VarChar(255)
+  description      String?  @db.Text
+  image            String?  @db.Text
+  location         String?  @db.VarChar(255)
+  start_time       DateTime
+  end_time         DateTime
+  price            Decimal? @db.Decimal(36, 0)
+  total_tickets    Int?
+  sold_tickets     Int?     @default(0)
+  contract_address String?  @db.VarChar(255)
+  status           String?  @db.VarChar(50)
+
+  wallet           Wallet   @relation(fields: [wallet_id], references: [wallet_id])
+  ticket_tiers     TicketTier[]
+  orders           Order[]
+  tickets          Ticket[]
+  listings         Listing[]
+  transaction_histories TransactionHistory[]
+  @@map("events")
+}
+
+model TicketTier {
+  ticket_tier_id BigInt   @id @default(autoincrement())
+  event_id       BigInt
+  tier           String   @db.VarChar(100)
+  price          Decimal  @db.Decimal(18, 2)
+  max_supply     Int
+
+  event          Event    @relation(fields: [event_id], references: [event_id])
+  order_items    OrderItem[]
+  tickets        Ticket[]
+  @@map("ticket_tiers")
+}
+
+model Order {
+  order_id     BigInt   @id @default(autoincrement())
+  wallet_id    BigInt
+  event_id     BigInt
+  total_amount Decimal  @db.Decimal(18, 2)
+  created_at   DateTime @default(now())
+
+  wallet       Wallet   @relation(fields: [wallet_id], references: [wallet_id])
+  event        Event    @relation(fields: [event_id], references: [event_id])
+  order_items  OrderItem[]
+  payments     Payment[]
+  @@map("orders")
+}
+
+model OrderItem {
+  order_item_id  BigInt   @id @default(autoincrement())
+  order_id       BigInt
+  ticket_tier_id BigInt
+  quantity       Int
+  unit_price     Decimal  @db.Decimal(18, 2)
+
+  order          Order    @relation(fields: [order_id], references: [order_id])
+  ticket_tier    TicketTier @relation(fields: [ticket_tier_id], references: [ticket_tier_id])
+  @@map("order_items")
+}
+
+model Payment {
+  payment_id BigInt  @id @default(autoincrement())
+  order_id   BigInt
+  status     String? @db.VarChar(50)
+  tx_hash    String? @db.VarChar(255)
+
+  order      Order   @relation(fields: [order_id], references: [order_id])
+  @@map("payments")
+}
+
+model Ticket {
+  ticket_id    BigInt  @id  // = NFT tokenId
+  tier_id      BigInt
+  event_id     BigInt
+  status       String? @db.VarChar(50)
+  owner_wallet String? @db.VarChar(255)
+  tx_hash      String? @db.VarChar(255)
+
+  tier         TicketTier @relation(fields: [tier_id], references: [ticket_tier_id])
+  event        Event      @relation(fields: [event_id], references: [event_id])
+  qr_codes     QrCode[]
+  nfts         Nft[]
+  @@map("tickets")
+}
+
+model Listing {
+  listing_id          BigInt    @id @default(autoincrement())
+  contract_listing_id BigInt    @unique
+  token_id            BigInt
+  event_id            BigInt
+  seller_wallet       String    @db.VarChar(255)
+  price               Decimal   @db.Decimal(36, 0)
+  status              String    @db.VarChar(50)
+  buyer_wallet        String?   @db.VarChar(255)
+  list_tx_hash        String?   @db.VarChar(255)
+  sold_tx_hash        String?   @db.VarChar(255)
+  created_at          DateTime  @default(now())
+  sold_at             DateTime?
+
+  event               Event     @relation(fields: [event_id], references: [event_id])
+  @@map("listings")
+}
+
+model QrCode {
+  qr_code_id BigInt    @id @default(autoincrement())
+  ticket_id  BigInt
+  expires_at DateTime?
+  used_at    DateTime?
+
+  ticket     Ticket    @relation(fields: [ticket_id], references: [ticket_id])
+  @@map("qr_code")
+}
+
+model Nft {
+  nft_id           BigInt  @id @default(autoincrement())
+  ticket_id        BigInt
+  contract_address String? @db.VarChar(255)
+  token_id         String? @db.VarChar(255)
+  mint_tx_hash     String? @db.VarChar(255)
+  owner_wallet     String? @db.VarChar(255)
+
+  ticket           Ticket  @relation(fields: [ticket_id], references: [ticket_id])
+  @@map("nft")
+}
+
+model TransactionHistory {
+  id         BigInt   @id @default(autoincrement())
+  wallet_id  BigInt
+  event_id   BigInt?
+  tx_hash    String   @unique @db.VarChar(255)
+  type       String   @db.VarChar(50)
+  amount     Decimal? @db.Decimal(18, 2)
+  status     String   @db.VarChar(50)
+  created_at DateTime @default(now())
+
+  wallet     Wallet   @relation(fields: [wallet_id], references: [wallet_id])
+  event      Event?   @relation(fields: [event_id], references: [event_id])
+  @@map("transaction_history")
+}
