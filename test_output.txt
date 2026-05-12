@@ -1,0 +1,18 @@
+﻿
+[nextEventId()]
+  calldata: 0x9f9d903a...
+  OK! result length: 66 chars
+  result: 0x0000000000000000000000000000000000000000000000000000000000000003...
+  decoded: 3
+
+[events(0)]
+  calldata: 0x0b7914300000000000...
+  ERROR: execution failed: invalid code -32000
+
+[getEvent(0)]
+  calldata: 0x6d1884e00000000000...
+  ERROR: execution failed: invalid code -32000
+
+[eth_getCode]
+  has code: true
+  code length: 33604 chars

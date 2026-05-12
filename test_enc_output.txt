@@ -1,0 +1,22 @@
+﻿sapphire-viem-v2 exports: sapphireLocalnet, SAPPHIRE_WRAPPED_VIEM_TRANSPORT, SAPPHIRE_WRAPPED_VIEM_SERIALIZER, sapphireHttpTransport, createSapphireSerializer, wrapWalletClient
+
+--- Test with Sapphire encrypted transport ---
+[nextEventId] OK: 3
+[events(0)] ERROR: Missing or invalid parameters.
+Double check you have provided the correct parameters.
+
+URL: https://testnet.sapphire.oasis.dev
+Request body: {"method":"eth_call","params":[{"data":"0xa264626f6479a462706b5820334ffd9011e5e6b639306c772d308c3cff08e440ec411673a865f6f5a087353b6464617461583cf8654d45544ef18
+[getEvent(0)] ERROR: Missing or invalid parameters.
+Double check you have provided the correct parameters.
+
+URL: https://testnet.sapphire.oasis.dev
+Request body: {"method":"eth_call","params":[{"data":"0xa264626f6479a462706b5820c677507b7e96a3573e1023e26b69816ccd7efe8d1f364e038c451b3fc936bb5f6464617461583c6cf7484a586b218
+
+--- Test with PLAIN http transport ---
+[plain nextEventId] OK: 3
+[plain events(0)] ERROR: Missing or invalid parameters.
+Double check you have provided the correct parameters.
+
+URL: https://testnet.sapphire.oasis.dev
+Request body: {"method":"eth_call","params":[{"data":"0x0b791430000000000

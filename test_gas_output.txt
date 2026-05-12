@@ -1,0 +1,9 @@
+﻿[gas=default, from=none] ERROR: execution failed: invalid code (code: -32000)
+[gas=0x1e8480, from=none] ERROR: execution failed: invalid code (code: -32000)
+[gas=0x5F5E100, from=none] ERROR: execution failed: invalid code (code: -32000)
+[gas=default, from=0x0000000000000000000000000000000000000001] ERROR: execution failed: invalid code (code: -32000)
+[gas=0x1e8480, from=0x0000000000000000000000000000000000000001] ERROR: execution failed: invalid code (code: -32000)
+[gas=0x5F5E100, from=0x73100Ae36Bd127C71139403F4C965Eab981EA329] ERROR: execution failed: invalid code (code: -32000)
+
+--- Testing with gasPrice ---
+[gasPrice test] ERROR: execution failed: invalid code

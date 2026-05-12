@@ -1,0 +1,16 @@
+﻿[nextTokenId()] OK, len=66
+  => "0"
+[owner()] OK, len=66
+  => "0x73100Ae36Bd127C71139403F4C965Eab981EA329"
+[verifier()] OK, len=66
+  => "0x0000000000000000000000000000000000000000"
+[getEventStats(0)] OK, len=194
+  => ["0","12","0"]
+[getEventStats(1)] OK, len=194
+  => ["0","123","0"]
+[eventRules(0)] OK, len=258
+  => [true,true,"12636","123"]
+[eventRules(1)] OK, len=258
+  => [true,true,"1797052320","10"]
+[tickets(0)] OK, len=194
+  => ["0",0,false]

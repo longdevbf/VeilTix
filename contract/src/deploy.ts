@@ -39,9 +39,9 @@ main().catch((error) => {
 Deployer: 0x73100Ae36Bd127C71139403F4C965Eab981EA329
 Estimated deploy gas: 2390755
 Using deploy gas limit: 15000000
-VeilTix deployed to: 0xBF07A5a2F1EB347ea1bE8DCF39887A9163C61a9f
+VeilTix deployed to: 0x754FfFEFefE220125665e2B4709765CB6EB3cB5D
 
 #Verified:
-The contract 0xBF07A5a2F1EB347ea1bE8DCF39887A9163C61a9f has already been verified on Sourcify.
-https://repo.sourcify.dev/contracts/full_match/23295/0xBF07A5a2F1EB347ea1bE8DCF39887A9163C61a9f/ 
+The contract 0x754FfFEFefE220125665e2B4709765CB6EB3cB5D has already been verified on Sourcify.
+https://repo.sourcify.dev/contracts/full_match/23295/0x754FfFEFefE220125665e2B4709765CB6EB3cB5D/ 
 */
