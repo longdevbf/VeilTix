@@ -10,6 +10,12 @@ import { useVeilTix } from "@/hooks/use-veiltix"
 import { VEILTIX_ABI } from "@/config/contract"
 import { getEventById } from "@/actions/event-details-actions"
 import { useWallet } from "@/components/context/walletContext"
+import dynamic from "next/dynamic"
+
+const MapDisplay = dynamic(
+  () => import("@/components/ui/map-display"),
+  { ssr: false, loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-xl flex items-center justify-center mt-4">Loading Map...</div> }
+)
 
 interface DetailedEvent {
   id: number
@@ -226,6 +232,7 @@ export default function EventDetailsPage() {
                   </div>
                 </div>
               </div>
+              <MapDisplay address={eventData.location} />
             </div>
           </div>
 
