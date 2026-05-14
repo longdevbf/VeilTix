@@ -5,12 +5,18 @@ import { motion, AnimatePresence } from "motion/react"
 import { Upload, Users, DollarSign, ArrowRight, Loader2, CheckCircle, MapPin, Calendar, Ticket } from "lucide-react"
 import { PageBg } from "@/components/ui/page-bg"
 import { TiltCard } from "@/components/ui/tilt-card"
-import { parseEther } from "viem"
+import { parseEther, parseEventLogs } from "viem"
 import { useVeilTix } from "@/hooks/use-veiltix"
 import { useRouter } from "next/navigation"
 import { usePublicClient } from "wagmi"
 import { VEILTIX_ABI, CONTRACT_ADDRESS } from "@/config/contract"
 import { useWallet } from "@/components/context/walletContext"
+import dynamic from "next/dynamic"
+
+const MapLocationPicker = dynamic(
+  () => import("@/components/ui/map-location-picker"),
+  { ssr: false, loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-xl flex items-center justify-center">Loading Map...</div> }
+)
 
 export default function CreatePage() {
   const router = useRouter()
@@ -32,6 +38,10 @@ export default function CreatePage() {
   const [statusMessage, setStatusMessage] = useState("")
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [txHash, setTxHash] = useState<string | null>(null)
+
+  const handleLocationSelect = (address: string) => {
+    setFormData(prev => ({ ...prev, location: address }))
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -68,7 +78,7 @@ export default function CreatePage() {
       const priceWei = parseEther(formData.ticketPrice || "0")
       const eventTime = BigInt(Math.floor(dateTime))
 
-      const { hash } = await createEvent(
+      const { hash, receipt } = await createEvent(
         formData.eventName, ipfsHash, formData.location, formData.description,
         eventTime, BigInt(formData.totalSupply), priceWei, true, true, eventTime, BigInt(10),
       )
@@ -76,10 +86,25 @@ export default function CreatePage() {
       setStatusMessage("Syncing event to database...")
 
       try {
-        const nextId = await publicClient?.readContract({
-          address: CONTRACT_ADDRESS, abi: VEILTIX_ABI, functionName: 'nextEventId',
-        }) as bigint
-        const createdEventId = (nextId - BigInt(1)).toString()
+        let createdEventId = ""
+        if (receipt) {
+          try {
+            const logs = parseEventLogs({ abi: VEILTIX_ABI as any, logs: receipt.logs })
+            const createdLog = logs.find((l: any) => l.eventName === "EventCreated")
+            if (createdLog) {
+              createdEventId = (createdLog as any).args.eventId.toString()
+            }
+          } catch (e) {
+            console.warn("Could not parse EventCreated log", e)
+          }
+        }
+        
+        if (!createdEventId) {
+          const nextId = await publicClient?.readContract({
+            address: CONTRACT_ADDRESS, abi: VEILTIX_ABI, functionName: 'nextEventId',
+          }) as bigint
+          createdEventId = (nextId - BigInt(1)).toString()
+        }
         await fetch('/api/events/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -203,12 +228,22 @@ export default function CreatePage() {
                 </div>
                 <div>
                   <label htmlFor="location" className={labelClass}>Location *</label>
-                  <input
-                    type="text" id="location" name="location"
-                    value={formData.location} onChange={handleInputChange}
-                    placeholder="e.g., Ho Chi Minh City, Vietnam"
-                    className={inputClass} required
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text" id="location" name="location"
+                      value={formData.location} onChange={handleInputChange}
+                      placeholder="e.g., Ho Chi Minh City, Vietnam"
+                      className={`${inputClass} flex-1`} required
+                    />
+                    <div className="px-4 py-3 bg-orange-100 text-orange-600 rounded-xl font-semibold border border-orange-200 flex-shrink-0 flex items-center justify-center">
+                      <MapPin size={20} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="md:col-span-2 mt-1 mb-3">
+                  <MapLocationPicker onLocationSelect={handleLocationSelect} searchQuery={formData.location} />
+                  <p className="text-xs text-gray-400 mt-2 text-center">Bấm vào vị trí trên bản đồ để tự động điền địa chỉ, hoặc gõ địa chỉ để bản đồ tự tìm đến</p>
                 </div>
                 <div>
                   <label htmlFor="eventDate" className={labelClass}>Event Date *</label>
