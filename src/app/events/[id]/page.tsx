@@ -4,9 +4,10 @@ import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { Calendar, MapPin, Ticket, Loader2, ArrowLeft, CheckCircle, Users, ExternalLink } from "lucide-react"
 import { PageBg } from "@/components/ui/page-bg"
-import { formatEther } from "viem"
+import { formatEther, parseEventLogs } from "viem"
 import Link from "next/link"
 import { useVeilTix } from "@/hooks/use-veiltix"
+import { VEILTIX_ABI } from "@/config/contract"
 import { getEventById } from "@/actions/event-details-actions"
 import { useWallet } from "@/components/context/walletContext"
 
@@ -83,13 +84,26 @@ export default function EventDetailsPage() {
     if (!eventData) return
     try {
       setIsBuying(true); setBuySuccess(false)
-      const { hash } = await buyTicket(eventData.id, 0, eventData.priceRaw)
+      const { hash, receipt } = await buyTicket(eventData.id, 0, eventData.priceRaw)
+
+      let tokenId: number | undefined
+      if (receipt) {
+        try {
+          const logs = parseEventLogs({ abi: VEILTIX_ABI as any, logs: receipt.logs })
+          const purchasedLog = logs.find((l: any) => l.eventName === "TicketPurchased")
+          if (purchasedLog) {
+            tokenId = Number((purchasedLog as any).args.tokenId)
+          }
+        } catch (e) {
+          console.warn("Could not parse TicketPurchased log", e)
+        }
+      }
 
       if (address) {
         const buyRes = await fetch('/api/transactions/buy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ eventId: eventData.id, txHash: hash, walletAddress: address })
+          body: JSON.stringify({ eventId: eventData.id, txHash: hash, walletAddress: address, tokenId })
         })
         if (!buyRes.ok) {
           const err = await buyRes.json().catch(() => ({}))
