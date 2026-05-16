@@ -19,8 +19,8 @@ export function useVeilTix() {
     location: string,
     description: string,
     time: bigint,
-    totalTickets: bigint,
-    price: bigint,
+    tierPrices: bigint[],
+    tierMaxSupplies: bigint[],
     transferable: boolean,
     refundable: boolean,
     refundDeadline: bigint,
@@ -31,7 +31,7 @@ export function useVeilTix() {
         address: CONTRACT_ADDRESS,
         abi: VEILTIX_ABI,
         functionName: "createEvent",
-        args: [name, image, location, description, time, totalTickets, price, transferable, refundable, refundDeadline, maxPerUser],
+        args: [name, image, location, description, time, tierPrices, tierMaxSupplies, transferable, refundable, refundDeadline, maxPerUser],
       });
       const receipt = await publicClient?.waitForTransactionReceipt({ hash });
       return { hash, receipt };

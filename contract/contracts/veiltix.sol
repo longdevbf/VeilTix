@@ -19,7 +19,7 @@ contract VeilTix is ERC721, Ownable {
     uint256 public marketFeeBps = 250;  // 2.5% to contract owner
     uint256 public accumulatedFees;
 
-    constructor() ERC721("VeilTix Ticket", "VTX") Ownable() {}
+    constructor() ERC721("VeilTix Ticket", "VTX") Ownable(msg.sender) {}
 
     struct Event {
         address organizer;
@@ -30,8 +30,14 @@ contract VeilTix is ERC721, Ownable {
         uint256 time;
         uint256 totalTickets;
         uint256 soldTickets;
-        uint256 price;
+        uint256 price; // Will store the lowest price
         bool isActive;
+    }
+
+    struct EventTier {
+        uint256 price;
+        uint256 maxSupply;
+        uint256 sold;
     }
 
     struct Ticket {
@@ -55,6 +61,8 @@ contract VeilTix is ERC721, Ownable {
     }
 
     mapping(uint256 => Event) public events;
+    mapping(uint256 => mapping(uint8 => EventTier)) public eventTiers;
+    mapping(uint256 => uint8) public eventTierCount;
     mapping(uint256 => Ticket) public tickets;
     mapping(uint256 => EventRule) public eventRules;
     mapping(address => mapping(uint256 => uint256)) public ticketsBought;
@@ -72,8 +80,8 @@ contract VeilTix is ERC721, Ownable {
         string location,
         string description,
         uint256 time,
-        uint256 totalTickets,
-        uint256 price
+        uint256[] tierPrices,
+        uint256[] tierMaxSupplies
     );
 
     event TicketPurchased(
@@ -143,14 +151,33 @@ contract VeilTix is ERC721, Ownable {
         string memory location,
         string memory description,
         uint256 time,
-        uint256 totalTickets,
-        uint256 price,
+        uint256[] memory tierPrices,
+        uint256[] memory tierMaxSupplies,
         bool transferable,
         bool refundable,
         uint256 refundDeadline,
         uint256 maxPerUser
     ) external {
+        require(tierPrices.length > 0 && tierPrices.length <= 255, "Invalid tiers length");
+        require(tierPrices.length == tierMaxSupplies.length, "Mismatched tiers arrays");
+
         uint256 eventId = nextEventId++;
+
+        uint256 totalTix = 0;
+        uint256 minPrice = type(uint256).max;
+
+        for (uint8 i = 0; i < tierPrices.length; i++) {
+            eventTiers[eventId][i] = EventTier({
+                price: tierPrices[i],
+                maxSupply: tierMaxSupplies[i],
+                sold: 0
+            });
+            totalTix += tierMaxSupplies[i];
+            if (tierPrices[i] < minPrice) {
+                minPrice = tierPrices[i];
+            }
+        }
+        eventTierCount[eventId] = uint8(tierPrices.length);
 
         events[eventId] = Event({
             organizer: msg.sender,
@@ -159,9 +186,9 @@ contract VeilTix is ERC721, Ownable {
             location: location,
             description: description,
             time: time,
-            totalTickets: totalTickets,
+            totalTickets: totalTix,
             soldTickets: 0,
-            price: price,
+            price: minPrice,
             isActive: true
         });
 
@@ -172,7 +199,7 @@ contract VeilTix is ERC721, Ownable {
             maxPerUser: maxPerUser
         });
 
-        emit EventCreated(eventId, msg.sender, name, image, location, description, time, totalTickets, price);
+        emit EventCreated(eventId, msg.sender, name, image, location, description, time, tierPrices, tierMaxSupplies);
     }
 
     function cancelEvent(uint256 eventId) external onlyOrganizer(eventId) {
@@ -186,8 +213,11 @@ contract VeilTix is ERC721, Ownable {
         EventRule storage rule = eventRules[eventId];
 
         require(e.isActive, "Event inactive");
-        require(e.soldTickets < e.totalTickets, "Sold out");
-        require(msg.value >= e.price, "Not enough ETH");
+        require(ticketType < eventTierCount[eventId], "Invalid ticket type");
+        
+        EventTier storage tier = eventTiers[eventId][ticketType];
+        require(tier.sold < tier.maxSupply, "Tier sold out");
+        require(msg.value >= tier.price, "Not enough ETH");
         require(
             ticketsBought[msg.sender][eventId] < rule.maxPerUser,
             "Limit exceeded"
@@ -205,6 +235,7 @@ contract VeilTix is ERC721, Ownable {
 
         ticketsBought[msg.sender][eventId]++;
         e.soldTickets++;
+        tier.sold++;
 
         // Send ETH to organizer
         payable(e.organizer).transfer(msg.value);
@@ -244,6 +275,8 @@ contract VeilTix is ERC721, Ownable {
         require(block.timestamp <= rule.refundDeadline, "Refund expired");
         require(!t.isUsed, "Already used");
 
+        uint256 refundAmount = eventTiers[t.eventId][t.ticketType].price;
+
         // Cancel any listing
         uint256 storedListingId = tokenListing[tokenId];
         if (storedListingId > 0) {
@@ -256,7 +289,7 @@ contract VeilTix is ERC721, Ownable {
         }
 
         _burn(tokenId);
-        payable(msg.sender).transfer(e.price);
+        payable(msg.sender).transfer(refundAmount);
     }
 
     // ==================== MARKETPLACE ====================
@@ -373,7 +406,7 @@ contract VeilTix is ERC721, Ownable {
     // ==================== TOKEN URI (ON-CHAIN METADATA) ====================
 
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
-        require(_exists(tokenId), "ERC721: invalid token ID");
+        require(_ownerOf(tokenId) != address(0), "ERC721: invalid token ID");
 
         Ticket storage t = tickets[tokenId];
         Event storage e = events[t.eventId];

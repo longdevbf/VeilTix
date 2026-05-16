@@ -12,7 +12,8 @@ export async function POST(req: Request) {
       description,
       time,        // unix timestamp (seconds)
       totalTickets,
-      price,       // wei as string
+      price,       // lowest tier price in wei as string
+      tiers,       // array of { name, price (wei string), supply, contractTierIndex }
     } = await req.json();
 
     if (!walletAddress || eventId === undefined || !name) {
@@ -70,18 +71,29 @@ export async function POST(req: Request) {
       },
     });
 
-    // Upsert a default TicketTier ("Standard") for this event
-    const existingTier = await prisma.ticketTier.findFirst({
-      where: { event_id: eventBigId, tier: 'Standard' },
-    });
+    // Sync ticket tiers: delete old and recreate
+    await prisma.ticketTier.deleteMany({ where: { event_id: eventBigId } });
 
-    if (!existingTier) {
+    if (Array.isArray(tiers) && tiers.length > 0) {
+      // Multiple tiers provided from create form
+      await prisma.ticketTier.createMany({
+        data: tiers.map((t: { name: string; price: string; supply: number; contractTierIndex: number }) => ({
+          event_id: eventBigId,
+          tier: t.name,
+          price: parseFloat(t.price) / 1e18,
+          max_supply: Number(t.supply),
+          contract_tier_index: t.contractTierIndex,
+        })),
+      });
+    } else {
+      // Fallback: create a single Standard tier
       await prisma.ticketTier.create({
         data: {
           event_id: eventBigId,
           tier: 'Standard',
           price: price ? parseFloat(price) / 1e18 : 0,
           max_supply: Number(totalTickets) || 0,
+          contract_tier_index: 0,
         },
       });
     }

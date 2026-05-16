@@ -31,6 +31,7 @@ interface TicketInfo {
   eventName: string
   organizer: string
   ticketType: number
+  tierName: string      // resolved tier name from DB
   isUsed: boolean
   isListed: boolean
   owner: string
@@ -197,7 +198,18 @@ export default function CheckInPage() {
         }
       }
 
-      setTicketInfo({ tokenId, eventId, eventName: ev?.name || selectedEvent.title, organizer: ev?.organizer || "", ticketType: ticket.ticketType, isUsed: ticket.isUsed, isListed, owner, sigVerified, sigExpired })
+      let tierName = ticket.ticketType === 0 ? "Standard" : `Type ${ticket.ticketType}`
+      try {
+        const tierRes = await fetch(`/api/events/${eventId}/tiers`)
+        if (tierRes.ok) {
+          const { tiers } = await tierRes.json()
+          const matched = tiers?.find((t: any) => Number(t.contract_tier_index) === Number(ticket.ticketType))
+          if (matched) tierName = matched.tier
+        }
+      } catch { /* non-fatal */ }
+
+      setTicketInfo({ tokenId, eventId, eventName: ev?.name || selectedEvent.title, organizer: ev?.organizer || "", ticketType: ticket.ticketType, tierName, isUsed: ticket.isUsed, isListed, owner, sigVerified, sigExpired })
+
     } catch (err: any) {
       setTicketError("Không tìm thấy vé #" + tokenId + ": " + (err?.shortMessage || err?.message || "Token không hợp lệ"))
     } finally {
@@ -567,8 +579,8 @@ export default function CheckInPage() {
                         <p className="text-gray-900 font-mono font-bold text-lg">#{ticketInfo.tokenId}</p>
                       </div>
                       <div>
-                        <p className="text-gray-400 text-xs">Loại vé</p>
-                        <p className="text-gray-700">{ticketInfo.ticketType === 0 ? "Standard" : `Type ${ticketInfo.ticketType}`}</p>
+                        <p className="text-gray-400 text-xs">Hạng vé</p>
+                        <p className="text-gray-700 font-semibold">{ticketInfo.tierName}</p>
                       </div>
                       <div className="col-span-2">
                         <p className="text-gray-400 text-xs">Sự kiện</p>

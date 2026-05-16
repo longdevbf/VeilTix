@@ -2,14 +2,11 @@
 
 import { useMemo, useState, useEffect, useCallback } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Calendar, MapPin, Search, Users, ChevronLeft, ChevronRight, Loader2, Plus } from "lucide-react"
+import { Calendar, MapPin, Search, Users, ChevronLeft, ChevronRight, Loader2, Plus, RefreshCw } from "lucide-react"
 import { PageBg } from "@/components/ui/page-bg"
 import { TiltCard } from "@/components/ui/tilt-card"
 import { TicketStack } from "@/components/ui/scene-3d"
 import { formatEther } from "viem"
-import { useReadContract } from "wagmi"
-import { VEILTIX_ABI, CONTRACT_ADDRESS } from "@/config/contract"
-import { useVeilTix } from "@/hooks/use-veiltix"
 import Link from "next/link"
 import { getEvents } from "@/actions/event-actions"
 
@@ -22,15 +19,9 @@ export default function EventsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const EVENTS_PER_PAGE = 9
-  const { } = useVeilTix()
-
-  const { data: nextEventIdRaw, isLoading: isIdLoading } = useReadContract({
-    address: CONTRACT_ADDRESS, abi: VEILTIX_ABI, functionName: "nextEventId",
-  })
-  const nextEventId = nextEventIdRaw ? Number(nextEventIdRaw) : 0
 
   const [eventsData, setEventsData] = useState<AppEvent[]>([])
-  const [isDataLoading, setIsDataLoading] = useState(false)
+  const [isDataLoading, setIsDataLoading] = useState(true)
 
   const fetchAllEvents = useCallback(async () => {
     setIsDataLoading(true)
@@ -41,8 +32,23 @@ export default function EventsPage() {
         if (imageUrl && !imageUrl.startsWith('http') && !imageUrl.startsWith('blob')) {
           imageUrl = `https://ipfs.io/ipfs/${imageUrl}`;
         }
+        // Determine display price: prefer lowest ticket tier if available
         let displayPrice = "Free"; let priceWei = BigInt(0);
-        if (dbEvent.price && dbEvent.price !== "0") { priceWei = BigInt(dbEvent.price); displayPrice = formatEther(priceWei); }
+        const tiers: any[] = dbEvent.ticket_tiers || []
+        if (tiers.length > 0) {
+          // Find lowest tier price (stored as ROSE decimal e.g. "0.05")
+          const lowestTierPrice = tiers.reduce((min: number, t: any) => {
+            const p = parseFloat(t.price)
+            return p < min ? p : min
+          }, Infinity)
+          if (isFinite(lowestTierPrice) && lowestTierPrice > 0) {
+            displayPrice = lowestTierPrice.toString()
+            priceWei = BigInt(Math.round(lowestTierPrice * 1e18))
+          }
+        } else if (dbEvent.price && dbEvent.price !== "0") {
+          priceWei = BigInt(dbEvent.price);
+          displayPrice = formatEther(priceWei);
+        }
         return {
           id: Number(dbEvent.event_id), title: dbEvent.title,
           date: new Date(dbEvent.start_time).toLocaleDateString('vi-VN'),
@@ -57,7 +63,8 @@ export default function EventsPage() {
     finally { setIsDataLoading(false) }
   }, [])
 
-  useEffect(() => { if (nextEventId > 0) fetchAllEvents() }, [nextEventId, fetchAllEvents])
+  // Fetch on mount — don't depend on on-chain nextEventId
+  useEffect(() => { fetchAllEvents() }, [fetchAllEvents])
 
   const filteredEvents = useMemo(() =>
     eventsData.filter(e => e.title.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -68,7 +75,7 @@ export default function EventsPage() {
   const paginatedEvents = filteredEvents.slice(startIndex, startIndex + EVENTS_PER_PAGE)
   const handleSearch = (v: string) => { setSearchTerm(v); setCurrentPage(1) }
   const goToPage = (p: number) => setCurrentPage(Math.max(1, Math.min(p, totalPages)))
-  const isGlobalLoading = isIdLoading || (nextEventId > 0 && isDataLoading)
+  const isGlobalLoading = isDataLoading
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -104,11 +111,21 @@ export default function EventsPage() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.35 }} whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
-              className="flex-shrink-0">
-              <Link href="/create" className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-2xl hover:bg-orange-600 transition-colors font-bold text-sm shadow-lg shadow-orange-500/25">
-                <Plus size={18} /> Create Event
-              </Link>
+              transition={{ delay: 0.35 }} className="flex items-center gap-2 flex-shrink-0">
+              <motion.button
+                whileHover={{ scale: 1.04, rotate: 180 }} whileTap={{ scale: 0.96 }}
+                onClick={fetchAllEvents}
+                disabled={isDataLoading}
+                className="p-3 bg-white border border-gray-200 rounded-2xl text-gray-500 hover:text-orange-500 hover:border-orange-300 disabled:opacity-40 transition-colors shadow-sm"
+                title="Làm mới danh sách"
+              >
+                <RefreshCw size={18} className={isDataLoading ? "animate-spin" : ""} />
+              </motion.button>
+              <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}>
+                <Link href="/create" className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-2xl hover:bg-orange-600 transition-colors font-bold text-sm shadow-lg shadow-orange-500/25">
+                  <Plus size={18} /> Create Event
+                </Link>
+              </motion.div>
             </motion.div>
           </div>
         </div>
