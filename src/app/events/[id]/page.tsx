@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
-import { Calendar, MapPin, Ticket, Loader2, ArrowLeft, CheckCircle, Users, ExternalLink } from "lucide-react"
+import { Calendar, MapPin, Ticket, Loader2, ArrowLeft, CheckCircle, Users, ExternalLink, Tag, DollarSign } from "lucide-react"
 import { PageBg } from "@/components/ui/page-bg"
 import { formatEther, parseEventLogs } from "viem"
 import Link from "next/link"
@@ -17,6 +17,14 @@ const MapDisplay = dynamic(
   { ssr: false, loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-xl flex items-center justify-center mt-4">Loading Map...</div> }
 )
 
+interface TicketTier {
+  ticket_tier_id: string
+  tier: string
+  price: string        // ROSE as decimal string (e.g. "0.05")
+  max_supply: number
+  contract_tier_index: number
+}
+
 interface DetailedEvent {
   id: number
   title: string
@@ -29,6 +37,7 @@ interface DetailedEvent {
   isActive: boolean
   image: string | null
   description: string
+  tiers: TicketTier[]
 }
 
 export default function EventDetailsPage() {
@@ -44,6 +53,7 @@ export default function EventDetailsPage() {
   const [isBuying, setIsBuying] = useState(false)
   const [buySuccess, setBuySuccess] = useState(false)
   const [txHash, setTxHash] = useState<string | null>(null)
+  const [selectedTier, setSelectedTier] = useState<TicketTier | null>(null)
 
   const fetchEvent = useCallback(async () => {
     setIsLoading(true)
@@ -63,7 +73,15 @@ export default function EventDetailsPage() {
         displayPrice = formatEther(priceWei);
       }
 
-      setEventData({
+      const tiers: TicketTier[] = (dbEvent.ticket_tiers || []).map((t: any) => ({
+        ticket_tier_id: t.ticket_tier_id.toString(),
+        tier: t.tier,
+        price: t.price.toString(),
+        max_supply: Number(t.max_supply),
+        contract_tier_index: Number(t.contract_tier_index ?? 0),
+      })).sort((a: TicketTier, b: TicketTier) => a.contract_tier_index - b.contract_tier_index)
+
+      const eventObj: DetailedEvent = {
         id: Number(dbEvent.event_id),
         title: dbEvent.title,
         date: new Date(dbEvent.start_time).toLocaleString('vi-VN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
@@ -74,8 +92,13 @@ export default function EventDetailsPage() {
         priceRaw: priceWei,
         isActive: dbEvent.status === "active",
         image: imageUrl || null,
-        description: dbEvent.description || ""
-      })
+        description: dbEvent.description || "",
+        tiers,
+      }
+
+      setEventData(eventObj)
+      // auto-select first tier
+      if (tiers.length > 0) setSelectedTier(tiers[0])
     } catch (err) {
       console.error("Error fetching event details:", err)
       setEventData(null)
@@ -87,10 +110,13 @@ export default function EventDetailsPage() {
   useEffect(() => { fetchEvent() }, [fetchEvent])
 
   const handleBuyTicket = async () => {
-    if (!eventData) return
+    if (!eventData || !selectedTier) return
     try {
       setIsBuying(true); setBuySuccess(false)
-      const { hash, receipt } = await buyTicket(eventData.id, 0, eventData.priceRaw)
+
+      // Parse tier price from ROSE decimal (e.g. "0.05") to Wei
+      const tierPriceWei = BigInt(Math.round(parseFloat(selectedTier.price) * 1e18))
+      const { hash, receipt } = await buyTicket(eventData.id, selectedTier.contract_tier_index, tierPriceWei)
 
       let tokenId: number | undefined
       if (receipt) {
@@ -109,7 +135,14 @@ export default function EventDetailsPage() {
         const buyRes = await fetch('/api/transactions/buy', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ eventId: eventData.id, txHash: hash, walletAddress: address, tokenId })
+          body: JSON.stringify({
+            eventId: eventData.id,
+            txHash: hash,
+            walletAddress: address,
+            tokenId,
+            tierName: selectedTier.tier,
+            tierId: selectedTier.ticket_tier_id,
+          })
         })
         if (!buyRes.ok) {
           const err = await buyRes.json().catch(() => ({}))
@@ -153,6 +186,10 @@ export default function EventDetailsPage() {
 
   const isSoldOut = eventData.sold >= eventData.attendees
   const soldPct = eventData.attendees > 0 ? Math.min((eventData.sold / eventData.attendees) * 100, 100) : 0
+  const hasTiers = eventData.tiers.length > 0
+  const selectedPriceDisplay = selectedTier
+    ? (parseFloat(selectedTier.price) === 0 ? "Miễn phí" : `${selectedTier.price} ROSE`)
+    : (eventData.price === "Free" ? "Miễn phí" : `${eventData.price} ROSE`)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -191,6 +228,36 @@ export default function EventDetailsPage() {
                 {eventData.description || "Chưa có mô tả cho sự kiện này."}
               </p>
             </div>
+
+            {/* Ticket Tiers info */}
+            {hasTiers && (
+              <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
+                <h2 className="text-xl font-bold text-gray-900 mb-5 flex items-center gap-2">
+                  <Tag size={18} className="text-orange-500" />
+                  Hạng vé
+                </h2>
+                <div className="space-y-3">
+                  {eventData.tiers.map(tier => (
+                    <div key={tier.ticket_tier_id}
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-xl bg-gray-50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                          <Ticket size={16} className="text-orange-500" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-gray-900">{tier.tier}</p>
+                          <p className="text-xs text-gray-400">{tier.max_supply} vé tối đa</p>
+                        </div>
+                      </div>
+                      <span className="font-bold text-orange-500 text-sm">
+                        {parseFloat(tier.price) === 0 ? "Miễn phí" : `${tier.price} ROSE`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-sm">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Thông tin chi tiết</h2>
@@ -241,14 +308,55 @@ export default function EventDetailsPage() {
             <div className="sticky top-24 bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
               <h3 className="text-lg font-bold text-gray-900 mb-5 flex items-center gap-2">
                 <Ticket size={18} className="text-orange-500" />
-                Thông tin vé
+                Mua vé
               </h3>
+
+              {/* Tier selector */}
+              {hasTiers && (
+                <div className="mb-5">
+                  <p className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide flex items-center gap-1">
+                    <Tag size={11} /> Chọn hạng vé
+                  </p>
+                  <div className="space-y-2">
+                    {eventData.tiers.map(tier => (
+                      <button
+                        key={tier.ticket_tier_id}
+                        type="button"
+                        onClick={() => setSelectedTier(tier)}
+                        className={`w-full flex items-center justify-between p-3 rounded-xl border-2 transition-all text-left ${
+                          selectedTier?.ticket_tier_id === tier.ticket_tier_id
+                            ? "border-orange-500 bg-orange-50"
+                            : "border-gray-200 bg-white hover:border-orange-300"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${
+                            selectedTier?.ticket_tier_id === tier.ticket_tier_id
+                              ? "border-orange-500 bg-orange-500"
+                              : "border-gray-300"
+                          }`}>
+                            {selectedTier?.ticket_tier_id === tier.ticket_tier_id && (
+                              <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                            )}
+                          </div>
+                          <span className="font-semibold text-gray-900 text-sm">{tier.tier}</span>
+                        </div>
+                        <span className={`text-sm font-bold ${
+                          selectedTier?.ticket_tier_id === tier.ticket_tier_id ? "text-orange-500" : "text-gray-600"
+                        }`}>
+                          {parseFloat(tier.price) === 0 ? "Miễn phí" : `${tier.price} ROSE`}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-4 mb-6">
                 <div className="flex justify-between items-center pb-4 border-b border-gray-100">
                   <span className="text-gray-500 text-sm">Giá vé</span>
                   <span className="text-2xl font-bold text-orange-500">
-                    {eventData.price === "Free" ? "Miễn phí" : `${eventData.price} ROSE`}
+                    {selectedPriceDisplay}
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
@@ -273,6 +381,9 @@ export default function EventDetailsPage() {
                 <div className="mb-5 p-4 bg-green-50 border border-green-200 rounded-xl text-center">
                   <CheckCircle className="text-green-500 mx-auto mb-2" size={28} />
                   <p className="text-green-700 font-bold text-sm mb-1">Giao dịch thành công!</p>
+                  {selectedTier && (
+                    <p className="text-green-600 text-xs mb-1">Hạng vé: <strong>{selectedTier.tier}</strong></p>
+                  )}
                   <a href={`https://testnet.explorer.sapphire.oasis.dev/tx/${txHash}`} target="_blank" rel="noreferrer"
                     className="inline-flex items-center gap-1 text-xs text-green-600 hover:text-green-700">
                     Xem trên Explorer <ExternalLink size={10} />
@@ -282,7 +393,7 @@ export default function EventDetailsPage() {
 
               <button
                 onClick={handleBuyTicket}
-                disabled={isBuying || isSoldOut}
+                disabled={isBuying || isSoldOut || !selectedTier}
                 className="w-full py-4 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 shadow-sm shadow-orange-500/20"
               >
                 {isBuying ? (
@@ -290,7 +401,10 @@ export default function EventDetailsPage() {
                 ) : isSoldOut ? (
                   "Đã hết vé"
                 ) : (
-                  "Mua vé ngay"
+                  <>
+                    <DollarSign size={18} />
+                    Mua vé {selectedTier ? `(${selectedTier.tier})` : ""}
+                  </>
                 )}
               </button>
 

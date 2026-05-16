@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence } from "motion/react"
-import { Upload, Users, DollarSign, ArrowRight, Loader2, CheckCircle, MapPin, Calendar, Ticket } from "lucide-react"
+import { Upload, Users, DollarSign, ArrowRight, Loader2, CheckCircle, MapPin, Calendar, Ticket, Plus, Trash2, Tag } from "lucide-react"
 import { PageBg } from "@/components/ui/page-bg"
 import { TiltCard } from "@/components/ui/tilt-card"
 import { parseEther, parseEventLogs } from "viem"
@@ -18,6 +18,12 @@ const MapLocationPicker = dynamic(
   { ssr: false, loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-xl flex items-center justify-center">Loading Map...</div> }
 )
 
+interface TicketTier {
+  name: string
+  price: string
+  supply: string
+}
+
 export default function CreatePage() {
   const router = useRouter()
   const { createEvent } = useVeilTix()
@@ -30,17 +36,20 @@ export default function CreatePage() {
     eventTime: "",
     location: "",
     description: "",
-    totalSupply: "",
-    ticketPrice: "",
     image: null as File | null,
   })
+
+  const [tiers, setTiers] = useState<TicketTier[]>([
+    { name: "Standard", price: "", supply: "" },
+  ])
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [statusMessage, setStatusMessage] = useState("")
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
   const [txHash, setTxHash] = useState<string | null>(null)
 
-  const handleLocationSelect = (address: string) => {
-    setFormData(prev => ({ ...prev, location: address }))
+  const handleLocationSelect = (addr: string) => {
+    setFormData(prev => ({ ...prev, location: addr }))
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -58,11 +67,31 @@ export default function CreatePage() {
     }
   }
 
+  const handleTierChange = (index: number, field: keyof TicketTier, value: string) => {
+    setTiers(prev => prev.map((t, i) => i === index ? { ...t, [field]: value } : t))
+  }
+
+  const addTier = () => {
+    if (tiers.length >= 8) return
+    setTiers(prev => [...prev, { name: "", price: "", supply: "" }])
+  }
+
+  const removeTier = (index: number) => {
+    if (tiers.length <= 1) return
+    setTiers(prev => prev.filter((_, i) => i !== index))
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!formData.image) {
       alert("Please upload an event cover image")
       return
+    }
+    for (const t of tiers) {
+      if (!t.name.trim() || !t.price || !t.supply) {
+        alert("Please fill in all ticket tier fields (name, price, supply).")
+        return
+      }
     }
     setIsSubmitting(true)
     try {
@@ -75,12 +104,14 @@ export default function CreatePage() {
 
       setStatusMessage("Please confirm transaction in your wallet...")
       const dateTime = new Date(`${formData.eventDate}T${formData.eventTime}`).getTime() / 1000
-      const priceWei = parseEther(formData.ticketPrice || "0")
       const eventTime = BigInt(Math.floor(dateTime))
+
+      const tierPrices = tiers.map(t => parseEther(t.price || "0"))
+      const tierMaxSupplies = tiers.map(t => BigInt(t.supply || "0"))
 
       const { hash, receipt } = await createEvent(
         formData.eventName, ipfsHash, formData.location, formData.description,
-        eventTime, BigInt(formData.totalSupply), priceWei, true, true, eventTime, BigInt(10),
+        eventTime, tierPrices, tierMaxSupplies, true, true, eventTime, BigInt(10),
       )
       setTxHash(hash)
       setStatusMessage("Syncing event to database...")
@@ -98,20 +129,36 @@ export default function CreatePage() {
             console.warn("Could not parse EventCreated log", e)
           }
         }
-        
+
         if (!createdEventId) {
           const nextId = await publicClient?.readContract({
             address: CONTRACT_ADDRESS, abi: VEILTIX_ABI, functionName: 'nextEventId',
           }) as bigint
           createdEventId = (nextId - BigInt(1)).toString()
         }
+
+        const totalTickets = tiers.reduce((acc, t) => acc + Number(t.supply || 0), 0)
+        const lowestPrice = tierPrices.reduce((min, p) => p < min ? p : min, tierPrices[0])
+
         await fetch('/api/events/sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            walletAddress: address, eventId: createdEventId, name: formData.eventName,
-            image: ipfsHash, location: formData.location, description: formData.description,
-            time: Math.floor(dateTime), totalTickets: formData.totalSupply, price: priceWei.toString(),
+            walletAddress: address,
+            eventId: createdEventId,
+            name: formData.eventName,
+            image: ipfsHash,
+            location: formData.location,
+            description: formData.description,
+            time: Math.floor(dateTime),
+            totalTickets: totalTickets.toString(),
+            price: lowestPrice.toString(),
+            tiers: tiers.map((t, i) => ({
+              name: t.name,
+              price: parseEther(t.price || "0").toString(),
+              supply: Number(t.supply),
+              contractTierIndex: i,
+            })),
           }),
         })
       } catch (syncErr) {
@@ -130,6 +177,11 @@ export default function CreatePage() {
 
   const inputClass = "w-full px-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition shadow-sm"
   const labelClass = "block text-sm font-semibold text-gray-700 mb-2"
+
+  const lowestTierPrice = tiers.reduce((min, t) => {
+    const p = parseFloat(t.price || "0")
+    return p < min ? p : min
+  }, Infinity)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -276,42 +328,108 @@ export default function CreatePage() {
                 />
               </div>
 
-              {/* Ticket Config */}
+              {/* ── Ticket Tiers ─────────────────────────────────── */}
               <div>
-                <h3 className="text-gray-900 font-bold mb-4 flex items-center gap-2">
-                  <span className="w-6 h-6 bg-orange-100 text-orange-500 rounded-md flex items-center justify-center text-xs font-bold">T</span>
-                  Ticket Configuration
-                </h3>
-                <div className="grid md:grid-cols-2 gap-5">
-                  <div>
-                    <label htmlFor="totalSupply" className={labelClass}>
-                      <span className="flex items-center gap-2">
-                        <Users size={15} className="text-orange-500" />
-                        Total Ticket Supply *
-                      </span>
-                    </label>
-                    <input
-                      type="number" id="totalSupply" name="totalSupply"
-                      value={formData.totalSupply} onChange={handleInputChange}
-                      placeholder="e.g., 500"
-                      className={inputClass} required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="ticketPrice" className={labelClass}>
-                      <span className="flex items-center gap-2">
-                        <DollarSign size={15} className="text-orange-500" />
-                        Ticket Price (ROSE) *
-                      </span>
-                    </label>
-                    <input
-                      type="number" id="ticketPrice" name="ticketPrice"
-                      value={formData.ticketPrice} onChange={handleInputChange}
-                      placeholder="e.g., 0.05"
-                      step="0.0001"
-                      className={inputClass} required
-                    />
-                  </div>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-gray-900 font-bold flex items-center gap-2">
+                    <span className="w-6 h-6 bg-orange-100 text-orange-500 rounded-md flex items-center justify-center text-xs font-bold">T</span>
+                    Ticket Tiers
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={addTier}
+                    disabled={tiers.length >= 8}
+                    className="flex items-center gap-1.5 text-sm font-semibold text-orange-500 border border-orange-300 rounded-lg px-3 py-1.5 hover:bg-orange-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    <Plus size={15} /> Add Tier
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <AnimatePresence>
+                    {tiers.map((tier, index) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, x: -20, height: 0, marginBottom: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="border border-gray-200 rounded-xl p-4 bg-gray-50 group"
+                      >
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-6 h-6 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            {index + 1}
+                          </div>
+                          <p className="text-sm font-semibold text-gray-600">Ticket Tier {index + 1}</p>
+                          {tiers.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeTier(index)}
+                              className="ml-auto text-gray-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1 flex items-center gap-1">
+                              <Tag size={11} /> Tier Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={tier.name}
+                              onChange={e => handleTierChange(index, "name", e.target.value)}
+                              placeholder="e.g. VIP, Standard"
+                              className={inputClass}
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1 flex items-center gap-1">
+                              <DollarSign size={11} /> Price (ROSE) *
+                            </label>
+                            <input
+                              type="number"
+                              value={tier.price}
+                              onChange={e => handleTierChange(index, "price", e.target.value)}
+                              placeholder="e.g. 0.05"
+                              step="0.0001"
+                              min="0"
+                              className={inputClass}
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-gray-500 mb-1 flex items-center gap-1">
+                              <Users size={11} /> Total Supply *
+                            </label>
+                            <input
+                              type="number"
+                              value={tier.supply}
+                              onChange={e => handleTierChange(index, "supply", e.target.value)}
+                              placeholder="e.g. 500"
+                              min="1"
+                              className={inputClass}
+                              required
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                {/* Tiers summary */}
+                <div className="mt-3 flex items-center justify-between text-xs text-gray-400 px-1">
+                  <span>
+                    Total tickets: <strong className="text-gray-700">{tiers.reduce((s, t) => s + Number(t.supply || 0), 0).toLocaleString()}</strong>
+                  </span>
+                  <span>
+                    From: <strong className="text-orange-500">
+                      {isFinite(lowestTierPrice) && lowestTierPrice > 0 ? `${lowestTierPrice} ROSE` : "—"}
+                    </strong>
+                  </span>
                 </div>
               </div>
 
@@ -323,9 +441,9 @@ export default function CreatePage() {
               >
                 <span className="flex items-center gap-2">
                   {isSubmitting ? (
-                    <><Loader2 className="animate-spin" size={20} /> Processing...</>
+                    <><Loader2 className="animate-spin" size={20} />Processing...</>
                   ) : (
-                    <>Mint Event & Launch Tickets <ArrowRight size={20} /></>
+                    <>Mint Event &amp; Launch Tickets <ArrowRight size={20} /></>
                   )}
                 </span>
                 {statusMessage && (
@@ -361,25 +479,18 @@ export default function CreatePage() {
                   boxShadow: "0 20px 60px -12px rgba(249,115,22,0.5), 0 8px 20px -8px rgba(0,0,0,0.2)",
                 }}
               >
-                {/* Background image */}
                 {uploadedImage && (
                   <>
                     <img src={uploadedImage} alt="preview" className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, rgba(249,115,22,0.7) 0%, rgba(180,83,9,0.85) 100%)" }} />
                   </>
                 )}
-
-                {/* Notches */}
                 <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-50 z-10" />
                 <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-50 z-10" />
-                {/* Dashed line */}
                 <div className="absolute inset-x-5 top-1/2 border-t border-dashed border-white/30 z-10" />
-                {/* Diagonal pattern */}
                 <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "repeating-linear-gradient(45deg,#fff 0,#fff 1px,transparent 0,transparent 50%)", backgroundSize: "8px 8px" }} />
-                {/* Shine */}
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none z-10" />
 
-                {/* Content */}
                 <div className="absolute inset-0 p-4 flex flex-col justify-between z-20">
                   <div className="flex justify-between items-start">
                     <div>
@@ -404,8 +515,8 @@ export default function CreatePage() {
                           <MapPin size={8} /> {formData.location}
                         </p>
                       )}
-                      {formData.ticketPrice && (
-                        <p className="text-white font-bold text-xs">{formData.ticketPrice} ROSE</p>
+                      {tiers[0]?.price && (
+                        <p className="text-white font-bold text-xs">From {tiers[0].price} ROSE</p>
                       )}
                     </div>
                     <div className="w-9 h-9 bg-white/20 rounded-lg grid grid-cols-5 gap-[1.5px] p-1 border border-white/20">
@@ -417,6 +528,17 @@ export default function CreatePage() {
                 </div>
               </div>
             </TiltCard>
+
+            {/* Tier badges */}
+            {tiers.some(t => t.name) && (
+              <div className="mt-4 flex flex-wrap gap-1.5 justify-center">
+                {tiers.filter(t => t.name).map((t, i) => (
+                  <span key={i} className="text-[10px] font-bold px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full border border-orange-200">
+                    {t.name}{t.price ? ` · ${t.price} ROSE` : ""}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Info */}
             <div className="mt-5 space-y-2.5">
