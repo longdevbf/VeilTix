@@ -9,6 +9,7 @@ import { TicketStack } from "@/components/ui/scene-3d"
 import { formatEther } from "viem"
 import Link from "next/link"
 import { getEvents } from "@/actions/event-actions"
+import EventsNearMeMap from "@/components/ui/events-near-me-map"
 
 interface AppEvent {
   id: number; title: string; date: string; location: string; attendees: number;
@@ -146,6 +147,16 @@ export default function EventsPage() {
             className="w-full pl-11 pr-4 py-3 bg-white border border-gray-300 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition shadow-sm"
           />
         </motion.div>
+
+        {/* Near Me */}
+        <EventsNearMeMap events={eventsData.map(e => ({
+          id: e.id,
+          title: e.title,
+          location: e.location,
+          date: e.date,
+          price: e.price,
+          image: e.image,
+        }))} />
 
         <AnimatePresence mode="wait">
           {isGlobalLoading ? (
